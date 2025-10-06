@@ -1,0 +1,166 @@
+import argparse
+import platform
+import signal
+import sys
+
+from .__version__ import (
+    __author__,
+    __email__,
+    __license__,
+    __original_author__,
+    __original_project__,
+    __version__,
+)
+from .animation import Animation
+from .entities import (
+    add_all_fish,
+    add_all_seaweed,
+    add_castle,
+    add_environment,
+    random_object,
+)
+
+
+def setup_aquarium(anim: Animation):
+    """Initialize all aquarium entities"""
+    add_environment(anim)
+    add_castle(anim)
+    add_all_seaweed(anim)
+    add_all_fish(anim)
+    random_object(None, anim)
+
+
+def signal_handler(sig, frame):
+    """Handle interrupt signals gracefully"""
+    sys.exit(0)
+
+
+def show_info():
+    """Display information about asciiquarium"""
+    info_text = f"""
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║   🐠 Asciiquarium {__version__} - ASCII Art Aquarium Animation                ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+An aquarium/sea animation in ASCII art for your terminal!
+
+FEATURES:
+  🐟 Multiple fish species with different sizes and colors
+  🦈 Sharks that hunt small fish
+  🐋 Whales with animated water spouts
+  🚢 Ships sailing on the surface
+  🐙 Sea monsters lurking in the depths
+  🌊 Animated blue water lines and seaweed
+  🏰 Castle decoration
+  💙 Blue bubbles rising from fish
+  🎨 Full color support
+  ⌨️  Interactive controls
+
+CONTROLS:
+  Q or q  - Quit the aquarium
+  P or p  - Pause/unpause animation
+  R or r  - Redraw and respawn entities
+
+REQUIREMENTS:
+  • Python 3.7 or higher
+  • Terminal with color support
+  • Minimum terminal size: 80x24
+
+PLATFORM SUPPORT:
+  ✓ Windows (with windows-curses)
+  ✓ Linux (built-in curses)
+  ✓ macOS (built-in curses)
+
+CREDITS:
+  Python Port     : {__author__} <{__email__}>
+  Original Author : {__original_author__}
+  Original Project: {__original_project__}
+
+LICENSE:
+  {__license__}
+
+LINKS:
+  PyPI       : https://pypi.org/project/asciiquarium/
+  GitHub     : https://github.com/MKAbuMattar/asciiquarium-python
+  Website    : https://mkabumattar.com/
+
+Enjoy your ASCII aquarium! 🐠🐟🦈🐋
+"""
+    print(info_text)
+
+
+def get_version_info():
+    """Get detailed version information in AWS CLI style"""
+    python_version = (
+        f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    )
+    system = platform.system()
+    release = platform.release()
+    machine = platform.machine()
+
+    version_string = f"asciiquarium/{__version__} Python/{python_version} {system}/{release} {machine}"
+    return version_string
+
+
+class VersionAction(argparse.Action):
+    """Custom action to display version info in AWS CLI style"""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print(get_version_info())
+        parser.exit()
+
+
+def create_parser():
+    """Create and configure argument parser"""
+    parser = argparse.ArgumentParser(
+        prog="asciiquarium",
+        description="🐠 An aquarium/sea animation in ASCII art for your terminal",
+        epilog="Enjoy your ASCII aquarium! 🐠🐟🦈",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        "-v",
+        "--version",
+        action=VersionAction,
+        nargs=0,
+        help="Show version information and exit",
+    )
+
+    parser.add_argument(
+        "-i",
+        "--info",
+        action="store_true",
+        help="Show detailed information about asciiquarium",
+    )
+
+    return parser
+
+
+def main():
+    """Main entry point for the asciiquarium application"""
+    parser = create_parser()
+    args = parser.parse_args()
+
+    if args.info:
+        show_info()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+
+    try:
+        anim = Animation()
+        anim.run(setup_aquarium)
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    finally:
+        print("\nThanks for watching! 🐠🐟🦈")
+
+
+if __name__ == "__main__":
+    main()
