@@ -1,6 +1,23 @@
-import curses
+import sys
 import time
 from typing import Any, Callable, Dict, List, Optional
+
+# Handle curses import for different Python versions and platforms
+try:
+    import curses
+except ImportError:
+    # On Windows with Python 3.13+, curses might not be available
+    # This will be caught and handled gracefully
+    if sys.platform == "win32":
+        try:
+            import windows_curses as curses  # type: ignore
+        except ImportError:
+            raise ImportError(
+                "Curses support is not available. On Windows with Python 3.13+, "
+                "you may need to install windows-curses manually or use Python 3.12 or earlier."
+            )
+    else:
+        raise
 
 from .entity import Entity
 

@@ -98,11 +98,21 @@ That's it! Enjoy your ASCII aquarium! 🐠
 
 ## � Requirements
 
-- **Python 3.7+** - Works with Python 3.7 through 3.13
-- **Terminal** - Any terminal with color support
+- **Python 3.7+** - Works with Python 3.7 through 3.14+
+- **Terminal** - Any terminal with color support (minimum 40x15, recommended 80x24)
 - **Dependencies** - Automatically handled:
-  - `windows-curses` - Auto-installed on Windows only
+  - `windows-curses` - Auto-installed on Windows (Python < 3.13)
   - `curses` - Built-in on Linux/macOS
+
+### Python 3.13+ Support
+
+For Python 3.13+ on Windows, you may need to install `windows-curses` manually:
+
+```bash
+pip install windows-curses
+```
+
+If you encounter issues, consider using Python 3.12 or earlier for the most stable experience.
 
 ## 🌍 Platform Support
 

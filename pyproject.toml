@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "asciiquarium"
-version = "2.1.1"
+version = "2.1.2"
 description = "An aquarium/sea animation in ASCII art for your terminal"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -26,11 +26,12 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Games/Entertainment",
 ]
 
 dependencies = [
-    "windows-curses>=2.4.1; sys_platform == 'win32'",
+    "windows-curses>=2.4.1; sys_platform == 'win32' and python_version < '3.13'",
     "typing-extensions>=4.0.0; python_version < '3.8'"
 ]
 
