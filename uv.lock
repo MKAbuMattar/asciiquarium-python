@@ -14,11 +14,11 @@ resolution-markers = [
 
 [[package]]
 name = "asciiquarium"
-version = "2.1.0"
+version = "2.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "typing-extensions", version = "4.7.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.8'" },
-    { name = "windows-curses", marker = "sys_platform == 'win32'" },
+    { name = "windows-curses", marker = "python_full_version < '3.13' and sys_platform == 'win32'" },
 ]
 
 [package.optional-dependencies]
@@ -41,7 +41,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "typing-extensions", marker = "python_full_version < '3.8'", specifier = ">=4.0.0" },
-    { name = "windows-curses", marker = "sys_platform == 'win32'", specifier = ">=2.4.1" },
+    { name = "windows-curses", marker = "python_full_version < '3.13' and sys_platform == 'win32'", specifier = ">=2.4.1" },
 ]
 provides-extras = ["dev"]
 

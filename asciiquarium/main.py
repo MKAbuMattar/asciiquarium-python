@@ -173,6 +173,16 @@ def main():
             return setup_aquarium(anim_instance, args.classic)
         
         anim.run(setup_with_mode)
+    except ImportError as e:
+        if "curses" in str(e).lower():
+            print(f"Error: {e}", file=sys.stderr)
+            if sys.version_info >= (3, 13) and platform.system() == "Windows":
+                print("\nFor Python 3.13+ on Windows, try:", file=sys.stderr)
+                print("  pip install windows-curses", file=sys.stderr)
+                print("  or use Python 3.12 or earlier", file=sys.stderr)
+            sys.exit(1)
+        else:
+            raise
     except KeyboardInterrupt:
         pass
     except Exception as e:
@@ -180,6 +190,11 @@ def main():
         sys.exit(1)
     finally:
         print("\nThanks for watching! 🐠🐟🦈")
+
+
+def cli_main():
+    """CLI entry point alias"""
+    main()
 
 
 if __name__ == "__main__":
