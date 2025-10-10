@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from .entity import Entity
 
-# Z-depth constants matching the original Perl version
+# Z-depth constants matching the original Perl version exactly
 DEPTH = {
     'gui_text': 0,
     'gui': 1,
@@ -52,7 +52,7 @@ class Animation:
 
         self.mask_color_map = {
             "r": "RED",
-            "R": "RED",
+            "R": "RED", 
             "g": "GREEN",
             "G": "GREEN",
             "y": "YELLOW",
@@ -67,12 +67,23 @@ class Animation:
             "W": "WHITE",
             "k": "BLACK",
             "K": "BLACK",
+            # Add numbered color mappings for fish
+            "1": "CYAN",
+            "2": "YELLOW", 
+            "3": "GREEN",
+            "4": "WHITE",
+            "5": "RED",
+            "6": "BLUE",
+            "7": "MAGENTA",
+            "8": "BLACK",
+            "9": "WHITE",
         }
 
     def init_screen(self, stdscr):
         """Initialize the curses screen"""
         self.screen = stdscr
-        self.screen.nodelay(1)
+        # Use halfdelay like the original for precise timing
+        curses.halfdelay(1)
         self.screen.keypad(1)
         curses.curs_set(0)
 
@@ -96,10 +107,10 @@ class Animation:
             raw_height, self.screen_width = self.screen.getmaxyx()
             self.screen_height = raw_height - 1
 
-            # More forgiving minimum size requirements
-            if raw_height < 20 or self.screen_width < 60:
+            # More forgiving minimum size requirements (original was very strict)
+            if raw_height < 15 or self.screen_width < 40:
                 raise ValueError(
-                    f"Terminal too small! Need at least 60x20, got {self.screen_width}x{raw_height}.\n"
+                    f"Terminal too small! Need at least 40x15, got {self.screen_width}x{raw_height}.\n"
                     "Please resize your terminal and try again."
                 )
 
@@ -211,7 +222,13 @@ class Animation:
                     char_code = ord(char)
                     if 32 <= char_code <= 126:  # Standard ASCII printable characters
                         self.screen.addch(draw_y, draw_x, char, color_attr)  # type: ignore[union-attr]
-                except (curses.error, ValueError, TypeError, OverflowError):
+                    elif char_code > 126:  # Extended ASCII or Unicode
+                        # Try to draw extended characters, fallback to space if it fails
+                        try:
+                            self.screen.addch(draw_y, draw_x, char, color_attr)  # type: ignore[union-attr]
+                        except (curses.error, UnicodeEncodeError):
+                            self.screen.addch(draw_y, draw_x, ' ', color_attr)  # type: ignore[union-attr]
+                except (curses.error, ValueError, TypeError, OverflowError, UnicodeEncodeError):
                     # Skip characters that can't be drawn
                     pass
 
@@ -248,9 +265,9 @@ class Animation:
 
         # Draw everything
         try:
-            self.screen.clear()  # Use clear instead of erase for better cleanup
+            self.screen.erase()  # Use erase like the original
             
-            # Sort entities by depth before drawing (lower Z = background)
+            # Sort entities by depth before drawing (higher Z = background, lower Z = foreground)
             sorted_entities = sorted(self.entities, key=lambda e: e.z, reverse=True)
             
             for entity in sorted_entities:
@@ -296,14 +313,7 @@ class Animation:
                     if not paused:
                         self.animate()
 
-                    current_time = time.time()
-                    elapsed = current_time - last_time
-                    # Target ~30 FPS (0.033s per frame)
-                    target_frame_time = 0.033
-                    sleep_time = max(0, target_frame_time - elapsed)
-                    if sleep_time > 0:
-                        time.sleep(sleep_time)
-                    last_time = time.time()
+                    # No sleep needed - halfdelay(1) handles timing like the original
             except KeyboardInterrupt:
                 self.running = False
 

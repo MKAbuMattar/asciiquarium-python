@@ -32,7 +32,13 @@ def setup_aquarium(anim: Animation, classic_mode: bool = False):
 
 def signal_handler(sig, frame):
     """Handle interrupt signals gracefully"""
-    sys.exit(0)
+    if sig == signal.SIGINT:
+        sys.exit(0)
+    elif sig == signal.SIGWINCH:
+        # Window resize - ignore for now, let curses handle it
+        pass
+    else:
+        sys.exit(1)
 
 
 def show_info():
@@ -155,7 +161,10 @@ def main():
         show_info()
         sys.exit(0)
 
+    # Set up signal handlers like the original
     signal.signal(signal.SIGINT, signal_handler)
+    if hasattr(signal, 'SIGWINCH'):
+        signal.signal(signal.SIGWINCH, signal_handler)
 
     try:
         anim = Animation()

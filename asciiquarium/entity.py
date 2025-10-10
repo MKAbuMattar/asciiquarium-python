@@ -119,11 +119,19 @@ class Entity:
             self.y += self.callback_args[1]
             self.z += self.callback_args[2]
 
-        if len(self.callback_args) >= 4:
+        # Handle animation frames
+        if len(self.callback_args) >= 4 and self.callback_args[3] > 0:
             self.frame_time += self.callback_args[3]
             if self.frame_time >= 1.0:
                 self.current_frame += 1
-                self.frame_time = 0
+                self.frame_time = 0.0
+                self.frame_count += 1
+        elif len(self.shapes) > 1:
+            # Default animation speed if not specified
+            self.frame_time += 0.1
+            if self.frame_time >= 1.0:
+                self.current_frame += 1
+                self.frame_time = 0.0
                 self.frame_count += 1
 
         return True
