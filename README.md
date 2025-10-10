@@ -80,33 +80,6 @@ pip install asciiquarium
 pipx install asciiquarium
 ```
 
-### Using uv (Modern & Fast)
-
-[uv](https://github.com/astral-sh/uv) is a fast Python package installer:
-
-```bash
-# Install with uv
-uv pip install asciiquarium
-
-# Or run directly without installing
-uvx asciiquarium
-```
-
-### Using Poetry (Project Management)
-
-Add to your `pyproject.toml`:
-
-```toml
-[tool.poetry.dependencies]
-asciiquarium = "^2.0.0"
-```
-
-Then install:
-
-```bash
-poetry add asciiquarium
-```
-
 ## 🎯 Usage
 
 After installation, simply run:
@@ -349,15 +322,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - **License**: `GPL-3.0-or-later`
 - **Size**: ~50KB
 - **Dependencies**: `windows-curses` (Windows only)
-
-## 🎉 Enjoy!
-
-Relax and enjoy your ASCII aquarium! 🐠🐟🦈🐋🚢🏰🌊
-
-```bash
-pip install asciiquarium
-asciiquarium
-```
 
 ---
 

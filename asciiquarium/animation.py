@@ -4,6 +4,25 @@ from typing import Any, Callable, Dict, List, Optional
 
 from .entity import Entity
 
+# Z-depth constants matching the original Perl version
+DEPTH = {
+    'gui_text': 0,
+    'gui': 1,
+    'shark': 2,
+    'fish_start': 3,
+    'fish_end': 20,
+    'seaweed': 21,
+    'castle': 22,
+    'water_line3': 2,
+    'water_gap3': 3,
+    'water_line2': 4,
+    'water_gap2': 5,
+    'water_line1': 6,
+    'water_gap1': 7,
+    'water_line0': 8,
+    'water_gap0': 9,
+}
+
 
 class Animation:
     """Main animation controller that manages the screen and all entities"""
@@ -77,9 +96,10 @@ class Animation:
             raw_height, self.screen_width = self.screen.getmaxyx()
             self.screen_height = raw_height - 1
 
-            if raw_height < 24 or self.screen_width < 80:
+            # More forgiving minimum size requirements
+            if raw_height < 20 or self.screen_width < 60:
                 raise ValueError(
-                    f"Terminal too small! Need at least 80x24, got {self.screen_width}x{raw_height}.\n"
+                    f"Terminal too small! Need at least 60x20, got {self.screen_width}x{raw_height}.\n"
                     "Please resize your terminal and try again."
                 )
 
@@ -104,6 +124,7 @@ class Animation:
     def add_entity(self, entity: Entity):
         """Add an existing entity"""
         self.entities.append(entity)
+        # Sort by Z-depth (lower Z values are drawn on top, like the original)
         self.entities.sort(key=lambda e: e.z)
 
     def del_entity(self, entity: Entity):
@@ -164,7 +185,12 @@ class Animation:
                 if draw_x < 0 or draw_x >= self.screen_width:
                     continue
 
-                if entity.auto_trans and char == " ":
+                # Skip transparent characters
+                if entity.auto_trans and char in [" ", entity.transparent]:
+                    continue
+                
+                # Skip empty or problematic characters
+                if char in ["\r", "\n", "\t"] or ord(char) < 32:
                     continue
 
                 color_attr = 0
@@ -181,8 +207,12 @@ class Animation:
                     )
 
                 try:
-                    self.screen.addch(draw_y, draw_x, char, color_attr)  # type: ignore[union-attr]
-                except Exception:
+                    # Ensure we're drawing a valid printable character
+                    char_code = ord(char)
+                    if 32 <= char_code <= 126:  # Standard ASCII printable characters
+                        self.screen.addch(draw_y, draw_x, char, color_attr)  # type: ignore[union-attr]
+                except (curses.error, ValueError, TypeError, OverflowError):
+                    # Skip characters that can't be drawn
                     pass
 
     def redraw_screen(self):
@@ -202,21 +232,30 @@ class Animation:
 
         current_time = time.time()
 
+        # Update all entities
         for entity in self.entities[:]:
             entity.update(self)
 
+        # Check collisions
         self._check_collisions()
 
+        # Remove dead entities
         for entity in self.entities[:]:
             if entity.should_die(self.screen_width, self.screen_height, current_time):
                 if entity.death_cb:
                     entity.death_cb(entity, self)
                 self.del_entity(entity)
 
+        # Draw everything
         try:
-            self.screen.erase()
-            for entity in self.entities:
+            self.screen.clear()  # Use clear instead of erase for better cleanup
+            
+            # Sort entities by depth before drawing (lower Z = background)
+            sorted_entities = sorted(self.entities, key=lambda e: e.z, reverse=True)
+            
+            for entity in sorted_entities:
                 self._draw_entity(entity)
+                
             self.screen.refresh()
         except curses.error:
             pass
@@ -259,10 +298,12 @@ class Animation:
 
                     current_time = time.time()
                     elapsed = current_time - last_time
-                    sleep_time = max(0, 0.033 - elapsed)
+                    # Target ~30 FPS (0.033s per frame)
+                    target_frame_time = 0.033
+                    sleep_time = max(0, target_frame_time - elapsed)
                     if sleep_time > 0:
                         time.sleep(sleep_time)
-                    last_time = current_time
+                    last_time = time.time()
             except KeyboardInterrupt:
                 self.running = False
 

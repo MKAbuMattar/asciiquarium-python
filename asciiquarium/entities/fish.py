@@ -1,6 +1,7 @@
 import random
 from typing import Any, Optional
 
+from ..animation import DEPTH
 from ..entity import Entity
 
 
@@ -19,13 +20,13 @@ def add_bubble(fish: Entity, anim: Any):
 
     anim.new_entity(
         entity_type="bubble",
-        shape=["●", "o", "O", "o", "●"],
+        shape=[".", "o", "O", "O", "O"],
         position=[bubble_x, bubble_y, bubble_z],
         callback_args=[0, -1, 0, 0.1],
         die_offscreen=True,
         physical=True,
         coll_handler=bubble_collision,
-        default_color="BLUE",
+        default_color="CYAN",
     )
 
 
@@ -72,65 +73,36 @@ def add_splat(anim: Any, x: int, y: int, z: int):
     )
 
 
-FISH_DESIGNS = [
+# Fish designs from the original Perl version
+OLD_FISH_DESIGNS = [
     {
         "shape": [
-            "   \\\n  / \\\n>=_('>\n  \\_/\n   /",
-            "  /\n / \\\n<')_=<\n \\_/\n  \\",
+            "       \\\n     ...\\..,\n\\  /'       \\\n >=     (  ' >\n/  \\      / /\n    `\"'\"'/''",
+            "      /\n  ,../...\n /       '\\  /\n< '  )     =<\n \\ \\      /  \\\n  `'\\\"'\"'",
         ],
         "color": [
-            "   2\n  1 1\n663745\n  111\n   3",
-            "  2\n 111\n547366\n 111\n  3",
+            "       2\n     1112111\n6  11       1\n 66     7  4 5\n6  1      3 1\n    11111311",
+            "      2\n  1112111\n 1       11  6\n5 4  7     66\n 1 3      1  6\n  11311111",
         ],
     },
     {
         "shape": [
-            "     ,\n     }\\\\\n\\  .'  `\\\n}}<   ( 6>\n/  `,  .'\n     }/\n     '",
-            "    ,\n   /{\n /'  `.  /\n<6 )   >{{\n `.  ,'  \\\n   {\\\n    `",
+            "    \\\n\\ /--\\\n>=  (o>\n/ \\__/\n    /",
+            "  /\n /--\\ /\n<o)  =<\n \\__/ \\\n  \\",
         ],
         "color": [
-            "     2\n     22\n6  11  11\n661   7 45\n6  11  11\n     33\n     3",
-            "    2\n   22\n 11  11  6\n54 7   166\n 11  11  6\n   33\n    3",
+            "    2\n6 1111\n66  745\n6 1111\n    3",
+            "  2\n 1111 6\n547  66\n 1111 6\n  3",
         ],
     },
     {
         "shape": [
-            r"            \\'`."
-            + "\n"
-            + r"             )  \\"
-            + "\n"
-            + r"(`.      _.-`' ' '`-."
-            + "\n"
-            + r" \ `.  .`        (o) \_"
-            + "\n"
-            + r"  >  ><     (((       ("
-            + "\n"
-            + r" / .`  ._      /_|  /'"
-            + "\n"
-            + r"(.`       `-. _  _.-`"
-            + "\n"
-            + r"            /__/'"
-            + "\n",
-            r"       .'`/"
-            + "\n"
-            + r"      /  ("
-            + "\n"
-            + r"  .-`' ` `'-._      .')"
-            + "\n"
-            + r"_/ (o)        '..  .' /"
-            + "\n"
-            + r")       )))     ><  <"
-            + "\n"
-            + r"`\  |_\      _.'  '. \\"
-            + "\n"
-            + r"  '-._  _ .-'       '.)"
-            + "\n"
-            + r"      `\__\\"
-            + "\n",
+            "       \\:.\n\\;,   ,;\\\\\\\\,,\n  \\\\\\\\;;:::::::o\n  ///;;::::::::<\n /;` ``/////``",
+            "      .:/\n   ,,///;,   ,;/\n o:::::::;;///\n>::::::::;;\\\\\\\\\n  ''\\\\\\\\\\\\\\\\'' ';\\",
         ],
         "color": [
-            "            1111\n             1  1\n111      11111 1 1111\n 1 11  11        141 11\n  1  11     777       5\n 1 11  111      333  11\n111       111 1  1111\n            11111\n",
-            "       1111\n      1  1\n  1111 1 11111      111\n11 141        11  11 1\n5       777     11  1\n11  333      111  11 1\n  1111  1 111       111\n      11111\n",
+            "       222\n666   1122211\n  6661111111114\n  66611111111115\n 666 113333311",
+            "      222\n   1122211   666\n 4111111111666\n51111111111666\n  113333311 666",
         ],
     },
     {
@@ -145,8 +117,8 @@ FISH_DESIGNS = [
     },
     {
         "shape": [
-            r"   ..\," + "\n" + r">='   ('>" + "\n" + r"  '''/''",
-            r"  ,/.." + "\n" + r"<')   `=<" + "\n" + r" ``\```",
+            "   ..\\\\\n>='   ('>\n  '''/''",
+            "  ,..\n<')   `=<\n ``\\```",
         ],
         "color": [
             "   1121\n661   745\n  111311",
@@ -155,8 +127,18 @@ FISH_DESIGNS = [
     },
     {
         "shape": [
-            r"  ,\\" + "\n" + r">=('>" + "\n" + r"  '/",
-            r" /," + "\n" + r"<')=<" + "\n" + r" \`",
+            "   \\\n  / \\\n>=_('>\n  \\_/\n   /",
+            "  /\n / \\\n<')_=<\n \\_/\n  \\",
+        ],
+        "color": [
+            "   2\n  1 1\n661745\n  111\n   3",
+            "  2\n 1 1\n547166\n 111\n  3",
+        ],
+    },
+    {
+        "shape": [
+            "  ,\\\n>=('>\\n  '/",
+            " /,\n<')=<\n \\`",
         ],
         "color": [
             "  12\n66745\n  13",
@@ -175,6 +157,52 @@ FISH_DESIGNS = [
     },
 ]
 
+NEW_FISH_DESIGNS = [
+    {
+        "shape": [
+            "   \\\n  / \\\n>=_('>\n  \\_/\n   /",
+            "  /\n / \\\n<')_=<\n \\_/\n  \\",
+        ],
+        "color": [
+            "   1\n  1 1\n663745\n  111\n   3",
+            "  2\n 111\n547366\n 111\n  3",
+        ],
+    },
+    {
+        "shape": [
+            "     ,\n     }\\\\\n\\  .'  `\\\n}}<   ( 6>\n/  `,  .'\n     }/\n     '",
+            "    ,\n   /{\n /'  `.  /\n<6 )   >{{\n `.  ,'  \\\n   {\\\n    `",
+        ],
+        "color": [
+            "     2\n     22\n6  11  11\n661   7 45\n6  11  11\n     33\n     3",
+            "    2\n   22\n 11  11  6\n54 7   166\n 11  11  6\n   33\n    3",
+        ],
+    },
+    {
+        "shape": [
+            "            \\'`.\n             )  \\\n(`.      _.-`' ' '`-.\n \\ `.  .`        (o) \\_\n  >  ><     (((       (\n / .`  ._      /_|  /'\n(.`       `-. _  _.-`\n            /__/'",
+            "       .'`/\n      /  (\n  .-'` ` `'-._      .')\n_/ (o)        '.  .' /\n)       )))     ><  <\n`\\  |_\\      _.'  '. \\\n  '-._  _ .-'       '.)\n      `\\__\\",
+        ],
+        "color": [
+            "            1111\n             1  1\n111      11111 1 1111\n 1 11  11        141 11\n  1  11     777       5\n 1 11  111      333  11\n111       111 1  1111\n            11111",
+            "       1111\n      1  1\n  1111 1 11111      111\n11 141        11  11 1\n5       777     11  1\n11  333      111  11 1\n  1111  1 111       111\n      11111",
+        ],
+    },
+    {
+        "shape": [
+            "       ,--,_\n__    _\\.---'-.\n\\ '.-\"     // o\\\n/_.'-._    \\\\  /\n       `\"--(/\"`",
+            "    _,--,\n .-'---./_    __\n/o \\\\     \"-.' /\n\\  //    _.-'._\\\n `\"\\)--\"`",
+        ],
+        "color": [
+            "       22222\n66    121111211\n6 6111     77 41\n6661111    77  1\n       11113311",
+            "    22222\n 112111121    66\n14 77     1116 6\n1  77    1111666\n 11331111",
+        ],
+    },
+]
+
+# All fish designs combined
+FISH_DESIGNS = OLD_FISH_DESIGNS + NEW_FISH_DESIGNS
+
 
 def rand_color(color_mask: str) -> str:
     """Replace numbered placeholders with random colors"""
@@ -186,9 +214,16 @@ def rand_color(color_mask: str) -> str:
     return result
 
 
-def add_fish(old_fish: Optional[Entity], anim: Any):
+def add_fish(old_fish: Optional[Entity], anim: Any, classic_mode: bool = False):
     """Add a new fish to the aquarium"""
-    fish_design = random.choice(FISH_DESIGNS)
+    if classic_mode:
+        fish_design = random.choice(OLD_FISH_DESIGNS)
+    else:
+        # 75% chance for new fish, 25% for old fish (like original)
+        if random.randint(1, 12) > 8:
+            fish_design = random.choice(NEW_FISH_DESIGNS)
+        else:
+            fish_design = random.choice(OLD_FISH_DESIGNS)
 
     direction = random.randint(0, 1)
 
@@ -197,11 +232,11 @@ def add_fish(old_fish: Optional[Entity], anim: Any):
 
     color_mask = rand_color(color_mask)
 
-    speed = random.uniform(0.15, 1.2)
+    speed = random.uniform(0.25, 2.0)
     if direction == 1:
         speed *= -1
 
-    depth = random.randint(3, 20)
+    depth = random.randint(DEPTH['fish_start'], DEPTH['fish_end'])
 
     fish_entity = Entity(
         entity_type="fish",
@@ -217,25 +252,29 @@ def add_fish(old_fish: Optional[Entity], anim: Any):
         coll_handler=fish_collision,
     )
 
-    max_height = 9
-    min_height = anim.height() - fish_entity.height
-    if min_height <= max_height:
-        fish_entity.y = max_height
+    # Ensure fish spawn in valid water area (below water line, above bottom)
+    water_line_bottom = 9  # Bottom of water line
+    screen_bottom = anim.height() - 1
+    available_height = screen_bottom - water_line_bottom - fish_entity.height
+    
+    if available_height > 0:
+        fish_entity.y = random.randint(water_line_bottom, water_line_bottom + available_height)
     else:
-        fish_entity.y = random.randint(max_height, min_height - 1)
+        fish_entity.y = water_line_bottom
 
-    if direction == 0:
-        fish_entity.x = 1 - fish_entity.width
-    else:
-        fish_entity.x = anim.width() - 2
+    # Position fish off-screen on appropriate side
+    if direction == 0:  # Moving right
+        fish_entity.x = -fish_entity.width
+    else:  # Moving left
+        fish_entity.x = anim.width()
 
     anim.add_entity(fish_entity)
 
 
-def add_all_fish(anim: Any):
+def add_all_fish(anim: Any, classic_mode: bool = False):
     """Add initial population of fish"""
     screen_size = (anim.height() - 9) * anim.width()
     fish_count = max(1, screen_size // 350)
 
     for _ in range(fish_count):
-        add_fish(None, anim)
+        add_fish(None, anim, classic_mode)

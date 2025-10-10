@@ -1,6 +1,7 @@
 import random
 from typing import Any, Optional
 
+from ..animation import DEPTH
 from ..entity import Entity
 
 
@@ -51,7 +52,7 @@ def add_shark(old_ent: Optional[Entity], anim: Any):
     anim.new_entity(
         entity_type="teeth",
         shape="*",
-        position=[teeth_x, teeth_y, 3],
+        position=[teeth_x, teeth_y, DEPTH['shark'] + 1],
         callback_args=[speed, 0, 0],
         physical=True,
     )
@@ -61,8 +62,8 @@ def add_shark(old_ent: Optional[Entity], anim: Any):
         color=shark_colors[direction],
         shape=shark_shapes[direction],
         auto_trans=True,
-        position=[x, y, 2],
-        default_color="WHITE",
+        position=[x, y, DEPTH['shark']],
+        default_color="CYAN",
         callback_args=[speed, 0, 0],
         die_offscreen=True,
         death_cb=shark_death,
@@ -107,7 +108,7 @@ __///____|____|____|_____
         color=ship_colors[direction],
         shape=ship_shapes[direction],
         auto_trans=True,
-        position=[x, 0, 5],
+        position=[x, 0, DEPTH['water_gap1']],
         default_color="WHITE",
         callback_args=[speed, 0, 0],
         die_offscreen=True,
@@ -181,7 +182,7 @@ BBBB          BBBBB""",
         color=whale_anim_mask,
         shape=whale_anim,
         auto_trans=True,
-        position=[x, 0, 4],
+        position=[x, 0, DEPTH['water_gap2']],
         default_color="WHITE",
         callback_args=[speed, 0, 0, 1],
         die_offscreen=True,
@@ -212,7 +213,7 @@ def add_monster(old_ent: Optional[Entity], anim: Any):
         shape=monster_shapes[direction],
         auto_trans=True,
         color=[monster_color, monster_color],
-        position=[x, 2, 4],
+        position=[x, 2, DEPTH['water_gap2']],
         callback_args=[speed, 0, 0, 0.25],
         death_cb=random_object,
         die_offscreen=True,
@@ -305,7 +306,7 @@ def add_big_fish(old_ent: Optional[Entity], anim: Any):
         shape=big_fish_shapes[direction],
         auto_trans=True,
         color=color_mask,
-        position=[x, y, 2],
+        position=[x, y, DEPTH['shark']],
         callback_args=[speed, 0, 0],
         death_cb=random_object,
         die_offscreen=True,

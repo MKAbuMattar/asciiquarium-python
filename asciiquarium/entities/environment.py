@@ -2,6 +2,7 @@ import random
 import time
 from typing import Any, Optional
 
+from ..animation import DEPTH
 from ..entity import Entity
 
 
@@ -19,20 +20,23 @@ def add_environment(anim: Any):
 
     for i, segment in enumerate(water_segments):
         tiled_segment = segment * segment_repeat
+        depth_key = f"water_line{i}"
+        if depth_key not in DEPTH:
+            depth_key = "water_line0"
+        
         anim.new_entity(
             name=f"water_seg_{i}",
             entity_type="waterline",
             shape=tiled_segment,
-            position=[0, i + 5, 8 - i * 2],
-            default_color="BLUE",
+            position=[0, i + 5, DEPTH[depth_key]],
+            default_color="CYAN",
             physical=True,
         )
 
 
 def add_castle(anim: Any):
     """Add castle decoration"""
-    castle_shape = """
-               T~~
+    castle_shape = """               T~~
                |
               /^\\
              /   \\
@@ -46,21 +50,21 @@ def add_castle(anim: Any):
  |- =_   | =| | | |  |- = -  |
  |_______|__|_|_|_|__|_______|"""
 
-    castle_color = """
-                RR
+    castle_color = """                RR
                 W
               Wyyw
              y   y
  W   W   W  yWWWWWy  W   W   W
 WW WW WW WW W   W WwWW WW WW WW
 WWWWWWW WWWWW W W WWWWWWWWWWWWWW
- W W W  W W W W W    W  W   W
- W  W   W  W W W     W W W  W
- W  W   W  W WWW     W W W  W
- W  W   W  W W W W   W  W   W
- W  W   W W W W W W  W  W   W
- WWWWWWWWWWWWWWWWWWWWWWWWWWWWW"""
+ W W W  W W W W W    W  W   WWW
+ W  W   W  W W W     W W W  WWW
+ W  W   W  W WWW     W W W  WWW
+ W  W   W  W W W W   W  W   WWW
+ W  W   W W W W W W  W  W   WWW
+ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"""
 
+    # Position exactly like the original Perl version
     castle_x = anim.width() - 32
     castle_y = anim.height() - 13
 
@@ -68,8 +72,8 @@ WWWWWWW WWWWW W W WWWWWWWWWWWWWW
         name="castle",
         shape=castle_shape,
         color=castle_color,
-        position=[castle_x, castle_y, 22],
-        default_color="YELLOW",
+        position=[castle_x, castle_y, DEPTH['castle']],
+        default_color="BLACK",
     )
 
 
@@ -95,7 +99,7 @@ def add_seaweed(old_seaweed: Optional[Entity], anim: Any):
     anim.new_entity(
         name=f"seaweed_{random.random()}",
         shape=frames,
-        position=[x, y, 21],
+        position=[x, y, DEPTH['seaweed']],
         callback_args=[0, 0, 0, anim_speed],
         die_time=time.time() + lifetime,
         death_cb=add_seaweed,

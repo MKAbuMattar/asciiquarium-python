@@ -21,12 +21,12 @@ from .entities import (
 )
 
 
-def setup_aquarium(anim: Animation):
+def setup_aquarium(anim: Animation, classic_mode: bool = False):
     """Initialize all aquarium entities"""
     add_environment(anim)
     add_castle(anim)
     add_all_seaweed(anim)
-    add_all_fish(anim)
+    add_all_fish(anim, classic_mode)
     random_object(None, anim)
 
 
@@ -136,6 +136,13 @@ def create_parser():
         help="Show detailed information about asciiquarium",
     )
 
+    parser.add_argument(
+        "-c",
+        "--classic",
+        action="store_true",
+        help="Classic mode - use only original fish and monster designs",
+    )
+
     return parser
 
 
@@ -152,7 +159,11 @@ def main():
 
     try:
         anim = Animation()
-        anim.run(setup_aquarium)
+        # Create a closure to pass classic_mode to setup_aquarium
+        def setup_with_mode(anim_instance):
+            return setup_aquarium(anim_instance, args.classic)
+        
+        anim.run(setup_with_mode)
     except KeyboardInterrupt:
         pass
     except Exception as e:

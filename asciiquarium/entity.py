@@ -1,3 +1,4 @@
+import time
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 
@@ -30,7 +31,9 @@ class Entity:
         self.coll_handler = coll_handler
         self.auto_trans = auto_trans
         self.depth_value = depth
+        self.transparent = " "  # Default transparent character
 
+        # Initialize shapes first
         if isinstance(shape, str):
             self.shapes = [shape]
         else:
@@ -40,6 +43,9 @@ class Entity:
             self.colors = [color] if color else [""]
         else:
             self.colors = color if color else [""]
+
+        # Clean up shape data to remove problematic characters
+        self.shapes = [self._clean_shape(s) for s in self.shapes]
 
         # Initialize position coordinates with explicit types
         self.x: float
@@ -73,6 +79,14 @@ class Entity:
         self.collision_list: List["Entity"] = []
 
         self._update_dimensions()
+
+    def _clean_shape(self, shape: str) -> str:
+        """Clean shape string of problematic characters"""
+        if not shape:
+            return ""
+        # Replace any question marks or other problematic characters
+        cleaned = shape.replace("?", " ")
+        return cleaned
 
     def _update_dimensions(self):
         """Calculate width and height from current shape"""
