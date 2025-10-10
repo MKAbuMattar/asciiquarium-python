@@ -39,8 +39,8 @@ def bubble_collision(bubble: Entity, anim: Any):
 
 
 def fish_callback(fish: Entity, anim: Any) -> bool:
-    """Fish behavior - occasionally blow bubbles"""
-    if random.randint(1, 100) > 97:
+    """Fish behavior - occasionally blow bubbles (matches original probability)"""
+    if random.randint(1, 100) > 97:  # 3% chance like original
         add_bubble(fish, anim)
     return fish.move_entity(anim)
 
@@ -137,7 +137,7 @@ OLD_FISH_DESIGNS = [
     },
     {
         "shape": [
-            "  ,\\\n>=('>\\n  '/",
+            "  ,\\\n>=('>\n  '/",
             " /,\n<')=<\n \\`",
         ],
         "color": [

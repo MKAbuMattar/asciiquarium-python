@@ -36,18 +36,16 @@ def add_shark(old_ent: Optional[Entity], anim: Any):
     ]
 
     direction = random.randint(0, 1)
-    speed = 0.8 if direction == 0 else -0.8
-
-    x = -53 if direction == 0 else anim.width() - 2
-    min_y = 9
-    max_y = max(9, anim.height() - 11)
-    if max_y > min_y:
-        y = random.randint(min_y, max_y)
-    else:
-        y = min_y
-
-    teeth_x = x + (-9 if direction == 0 else 9)
+    x = -53
+    y = random.randint(9, max(9, anim.height() - (10 + 9))) + 9 if anim.height() > 19 else 9
+    teeth_x = -9
     teeth_y = y + 7
+    speed = 2
+    
+    if direction == 1:  # Moving right to left
+        speed *= -1
+        x = anim.width() - 2
+        teeth_x = x + 9
 
     anim.new_entity(
         entity_type="teeth",
@@ -191,19 +189,22 @@ BBBB          BBBBB""",
 
 
 def add_monster(old_ent: Optional[Entity], anim: Any):
-    """Add a sea monster"""
+    """Add a sea monster (simplified version to avoid character encoding issues)"""
     monster_shapes = [
         [
-            "\n         _   _                   _   _       _a_a\n       _{.`=`.}_     _   _     _{.`=`.}_    {/ ''\\_\n _    {.'  _  '.}   {.`'`.}   {.'  _  '.}  {|  ._oo)\n{ \\  {/  .' '.  \\}  {/ .-. \\}  {/  .' '.  \\} {/  |",
-            "\n                      _   _                    _a_a\n  _      _   _     _{.`=`.}_     _   _      {/ ''\\_\n { \\    {.`'`.}   {.'  _  '.}   {.`'`.}    {|  ._oo)\n  \\ \\  {/ .-. \\}  {/  .' '.  \\}  {/ .-. \\}   {/  |",
+            "\n         _   _                   _   _       _a_a\n       _{.`=`.}_     _   _     _{.`=`.}_    {/ ''\\_\n _    {.'  _  '.}   {.`'`.}   {.'  _  '.}  {|  ._oo)\n{ \\  {/  .'~'.  \\}  {/ .-. \\}  {/  .'~'.  \\} {/  |",
+            "\n                      _   _                    _a_a\n  _      _   _     _{.`=`.}_     _   _      {/ ''\\_\n { \\    {.`'`.}   {.'  _  '.}   {.`'`.}    {|  ._oo)\n  \\ \\  {/ .-. \\}  {/  .'~'.  \\}  {/ .-. \\}   {/  |",
         ],
         [
-            "\n   a_a_       _   _                   _   _\n _/'' \\}    _{.`=`.}_     _   _     _{.`=`.}_\n(oo_.  |}  {.'  _  '.}   {.`'`.}   {.'  _  '.}    _\n    |  \\} {/  .' '.  \\}  {/ .-. \\}  {/  .' '.  \\}  / }",
-            "\n   a_a_                    _   _\n _/'' \\}      _   _     _{.`=`.}_     _   _      _\n(oo_.  |}    {.`'`.}   {.'  _  '.}   {.`'`.}    / }\n    |  \\}   {/ .-. \\}  {/  .' '.  \\}  {/ .-. \\}  / /",
+            "\n   a_a_       _   _                   _   _\n _/'' \\}    _{.`=`.}_     _   _     _{.`=`.}_\n(oo_.  |}  {.'  _  '.}   {.`'`.}   {.'  _  '.}    _\n    |  \\} {/  .'~'.  \\}  {/ .-. \\}  {/  .'~'.  \\}  / }",
+            "\n   a_a_                    _   _\n _/'' \\}      _   _     _{.`=`.}_     _   _      _\n(oo_.  |}    {.`'`.}   {.'  _  '.}   {.`'`.}    / }\n    |  \\}   {/ .-. \\}  {/  .'~'.  \\}  {/ .-. \\}  / /",
         ],
     ]
 
-    monster_color = "\n   W W\n\n\n\n"
+    monster_colors = [
+        "\n                                                W W\n\n\n\n",
+        "\n   W W\n\n\n\n",
+    ]
 
     direction = random.randint(0, 1)
     speed = 0.8 if direction == 0 else -0.8
@@ -212,7 +213,7 @@ def add_monster(old_ent: Optional[Entity], anim: Any):
     anim.new_entity(
         shape=monster_shapes[direction],
         auto_trans=True,
-        color=[monster_color, monster_color],
+        color=[monster_colors[direction], monster_colors[direction]],
         position=[x, 2, DEPTH['water_gap2']],
         callback_args=[speed, 0, 0, 0.25],
         death_cb=random_object,
@@ -312,6 +313,7 @@ def add_big_fish(old_ent: Optional[Entity], anim: Any):
         die_offscreen=True,
         default_color="YELLOW",
     )
+
 
 
 RANDOM_OBJECTS = [
