@@ -55,7 +55,7 @@ Repository = "https://github.com/MKAbuMattar/asciiquarium-python"
 # Ruff configuration
 [tool.ruff]
 line-length = 100
-target-version = "py37"
+target-version = "py38"
 
 # Enable specific rule sets
 [tool.ruff.lint]
@@ -80,7 +80,7 @@ ignore = [
 
 # MyPy configuration
 [tool.mypy]
-python_version = "3.7"
+python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false  # Set to true when ready for full type checking
