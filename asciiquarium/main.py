@@ -69,6 +69,7 @@ CONTROLS:
   Q or q  - Quit the aquarium
   P or p  - Pause/unpause animation
   R or r  - Redraw and respawn entities
+  I or i  - Show/hide info screen (press I or ESC to return)
 
 REQUIREMENTS:
   • Python 3.7 or higher

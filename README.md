@@ -95,6 +95,7 @@ That's it! Enjoy your ASCII aquarium! 🐠
 - **`Q`** or **`q`** - Quit the aquarium
 - **`P`** or **`p`** - Pause/unpause the animation
 - **`R`** or **`r`** - Redraw and respawn all entities
+- **`I`** or **`i`** - Show/hide info overlay
 
 ## � Requirements
 

@@ -16,6 +16,14 @@ except ImportError:
     else:
         raise
 
+from .__version__ import (
+    __author__,
+    __email__,
+    __license__,
+    __original_author__,
+    __original_project__,
+    __version__,
+)
 from .entity import Entity
 
 DEPTH = {
@@ -282,6 +290,68 @@ class Animation:
         except curses.error:
             pass
 
+    def show_info_overlay(self):
+        """Display info overlay on top of paused animation"""
+        try:
+            height, width = self.screen.getmaxyx()
+
+            for y in range(height):
+                try:
+                    self.screen.addstr(y, 0, " " * (width - 1))
+                except curses.error:
+                    pass
+
+            info_lines = [
+                "╔═══════════════════════════════════════════════════════════════════════╗",
+                "║                                                                       ║",
+                f"║   🐠 Asciiquarium {__version__} - ASCII Art Aquarium Animation                ║",
+                "║                                                                       ║",
+                "╚═══════════════════════════════════════════════════════════════════════╝",
+                "",
+                "  An aquarium/sea animation in ASCII art for your terminal!",
+                "",
+                "  FEATURES:",
+                "    • Multiple fish species with different sizes and colors",
+                "    • Sharks that hunt small fish",
+                "    • Whales with animated water spouts",
+                "    • Ships sailing on the surface",
+                "    • Sea monsters lurking in the depths",
+                "    • Animated blue water lines and seaweed",
+                "    • Castle decoration",
+                "    • Blue bubbles rising from fish",
+                "",
+                "  CONTROLS:",
+                "    Q or q  - Quit the aquarium",
+                "    P or p  - Pause/unpause animation",
+                "    R or r  - Redraw and respawn entities",
+                "    I or i  - Show/hide this info screen",
+                "",
+                "  CREDITS:",
+                f"    Python Port     : {__author__} <{__email__}>",
+                f"    Original Author : {__original_author__}",
+                f"    Original Project: {__original_project__}",
+                "",
+                "  LICENSE: " + __license__,
+                "",
+                "  Press 'I' or ESC to return to aquarium...",
+            ]
+
+            start_y = max(0, (height - len(info_lines)) // 2)
+
+            for i, line in enumerate(info_lines):
+                y = start_y + i
+                if y < height - 1:
+                    x = max(0, (width - len(line)) // 2)
+                    try:
+                        self.screen.addstr(y, x, line[: width - 1])
+                    except curses.error:
+                        pass
+
+            self.screen.refresh()
+
+        except curses.error:
+            pass
+
     def run(self, setup_callback: Callable):
         """Main animation loop"""
 
@@ -292,6 +362,7 @@ class Animation:
             setup_callback(self)
 
             paused = False
+            showing_info = False
             last_time = time.time()
 
             try:
@@ -308,15 +379,34 @@ class Animation:
                                 setup_callback(self)
                                 self.redraw_screen()
                             elif key_char == "p":
-                                paused = not paused
+                                if not showing_info:
+                                    paused = not paused
+                            elif key_char == "i":
+                                showing_info = not showing_info
+                                if showing_info:
+                                    paused = True
+                                    self.show_info_overlay()
+                                else:
+                                    paused = False
+                                    self.redraw_screen()
+                            elif key == 27:
+                                if showing_info:
+                                    showing_info = False
+                                    paused = False
+                                    self.redraw_screen()
                             elif key == curses.KEY_RESIZE:
                                 self.update_term_size()
-                                self.redraw_screen()
+                                if showing_info:
+                                    self.show_info_overlay()
+                                else:
+                                    self.redraw_screen()
                     except Exception:
                         pass
 
-                    if not paused:
+                    if not paused and not showing_info:
                         self.animate()
+                    elif showing_info:
+                        pass
 
             except KeyboardInterrupt:
                 self.running = False
