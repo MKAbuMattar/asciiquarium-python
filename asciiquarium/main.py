@@ -2,6 +2,7 @@ import argparse
 import platform
 import signal
 import sys
+import threading
 
 from .__version__ import (
     __author__,
@@ -19,6 +20,7 @@ from .entities import (
     add_environment,
     random_object,
 )
+from .version_checker import check_for_updates
 
 
 def setup_aquarium(anim: Animation, classic_mode: bool = False):
@@ -148,6 +150,12 @@ def create_parser():
         help="Classic mode - use only original fish and monster designs",
     )
 
+    parser.add_argument(
+        "--check-updates",
+        action="store_true",
+        help="Check for available updates and exit",
+    )
+
     return parser
 
 
@@ -159,6 +167,16 @@ def main():
     if args.info:
         show_info()
         sys.exit(0)
+
+    if args.check_updates:
+        print("Checking for updates...")
+        latest = check_for_updates(silent=False)
+        if latest is None:
+            print("✓ You are running the latest version!")
+        sys.exit(0)
+
+    update_thread = threading.Thread(target=check_for_updates, daemon=True)
+    update_thread.start()
 
     signal.signal(signal.SIGINT, signal_handler)
     if hasattr(signal, "SIGWINCH"):
@@ -187,6 +205,7 @@ def main():
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     finally:
+        update_thread.join(timeout=0.5)
         print("\nThanks for watching! 🐠🐟🦈")
 
 
