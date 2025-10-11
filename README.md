@@ -46,7 +46,7 @@
 
 An aquarium/sea animation in ASCII art for your terminal! This is a Python reimplementation of the classic Perl asciiquarium, designed to work cross-platform on Windows, Linux, and macOS.
 
-<!-- ![Asciiquarium Demo](https://raw.githubusercontent.com/MKAbuMattar/asciiquarium-python/master/demo.gif) -->
+![Asciiquarium](https://github.com/MKAbuMattar/asciiquarium-python/blob/main/.github/assets/asciiquarium.gif)
 
 </div>
 
