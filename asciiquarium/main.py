@@ -35,7 +35,6 @@ def signal_handler(sig, frame):
     if sig == signal.SIGINT:
         sys.exit(0)
     elif sig == signal.SIGWINCH:
-        # Window resize - ignore for now, let curses handle it
         pass
     else:
         sys.exit(1)
@@ -161,17 +160,16 @@ def main():
         show_info()
         sys.exit(0)
 
-    # Set up signal handlers like the original
     signal.signal(signal.SIGINT, signal_handler)
-    if hasattr(signal, 'SIGWINCH'):
+    if hasattr(signal, "SIGWINCH"):
         signal.signal(signal.SIGWINCH, signal_handler)
 
     try:
         anim = Animation()
-        # Create a closure to pass classic_mode to setup_aquarium
+
         def setup_with_mode(anim_instance):
             return setup_aquarium(anim_instance, args.classic)
-        
+
         anim.run(setup_with_mode)
     except ImportError as e:
         if "curses" in str(e).lower():

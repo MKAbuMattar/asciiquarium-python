@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "asciiquarium"
-version = "2.1.2"
+version = "2.2.0"
 description = "An aquarium/sea animation in ASCII art for your terminal"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = "GPL-3.0-or-later"
 authors = [
     {name = "Mohammad Abu Mattar", email = "info@mkabumattar.com"}
@@ -19,7 +19,6 @@ classifiers = [
     "Intended Audience :: End Users/Desktop",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -32,12 +31,12 @@ classifiers = [
 
 dependencies = [
     "windows-curses>=2.4.1; sys_platform == 'win32' and python_version < '3.13'",
-    "typing-extensions>=4.0.0; python_version < '3.8'"
 ]
 
 [project.optional-dependencies]
 dev = [
     "black>=22.0.0",
+    "hatch>=1.8.0",
     "isort>=5.10.0",
     "mypy>=1.0.0",
     "ruff>=0.1.0",
@@ -118,10 +117,11 @@ include = ["LICENSE", "README.md"]
 
 [tool.hatch.envs.default]
 dependencies = [
-    "black>=22.0.0,<24.0.0",  # Python 3.7 compatible
-    "isort>=5.10.0,<5.12.0",  # Python 3.7 compatible
-    "mypy>=0.990,<1.5.0",     # Python 3.7 compatible
-    "ruff>=0.1.0,<0.2.0",     # Python 3.7 compatible
+    "black>=22.0.0,<24.0.0",
+    "hatch>=1.8.0,<1.9.0",
+    "isort>=5.10.0,<5.12.0",
+    "mypy>=0.990,<1.5.0",
+    "ruff>=0.1.0,<0.2.0",
     "twine>=4.0.2",
     "setuptools>=61.0",
     "wheel>=0.37.1",
