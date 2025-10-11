@@ -207,7 +207,6 @@ def main():
         sys.exit(1)
     finally:
         update_thread.join(timeout=0.5)
-        print("\nThanks for watching! 🐠🐟🦈")
 
 
 def cli_main():
