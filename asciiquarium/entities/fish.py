@@ -40,17 +40,31 @@ def bubble_collision(bubble: Entity, anim: Any):
 
 def fish_callback(fish: Entity, anim: Any) -> bool:
     """Fish behavior - occasionally blow bubbles (matches original probability)"""
-    if random.randint(1, 100) > 97:  # 3% chance like original
+    if random.randint(1, 100) > 97:
         add_bubble(fish, anim)
     return fish.move_entity(anim)
 
 
 def fish_collision(fish: Entity, anim: Any):
-    """Handle fish collision with predators"""
+    """Handle fish collision with predators and fishing hook"""
+    from .special import retract
+
     for col_obj in fish.collisions():
         if col_obj.entity_type == "teeth" and fish.height <= 5:
             add_splat(anim, *col_obj.position())
             fish.kill()
+            break
+        elif col_obj.entity_type == "hook_point":
+            retract(col_obj, anim)
+            retract(fish, anim)
+
+            hooks = anim.get_entities_of_type("fishhook")
+            lines = anim.get_entities_of_type("fishline")
+
+            if hooks:
+                retract(hooks[0], anim)
+            if lines:
+                retract(lines[0], anim)
             break
 
 
@@ -73,7 +87,6 @@ def add_splat(anim: Any, x: int, y: int, z: int):
     )
 
 
-# Fish designs from the original Perl version
 OLD_FISH_DESIGNS = [
     {
         "shape": [
@@ -200,7 +213,6 @@ NEW_FISH_DESIGNS = [
     },
 ]
 
-# All fish designs combined
 FISH_DESIGNS = OLD_FISH_DESIGNS + NEW_FISH_DESIGNS
 
 
@@ -219,7 +231,6 @@ def add_fish(old_fish: Optional[Entity], anim: Any, classic_mode: bool = False):
     if classic_mode:
         fish_design = random.choice(OLD_FISH_DESIGNS)
     else:
-        # 75% chance for new fish, 25% for old fish (like original)
         if random.randint(1, 12) > 8:
             fish_design = random.choice(NEW_FISH_DESIGNS)
         else:
@@ -236,7 +247,7 @@ def add_fish(old_fish: Optional[Entity], anim: Any, classic_mode: bool = False):
     if direction == 1:
         speed *= -1
 
-    depth = random.randint(DEPTH['fish_start'], DEPTH['fish_end'])
+    depth = random.randint(DEPTH["fish_start"], DEPTH["fish_end"])
 
     fish_entity = Entity(
         entity_type="fish",
@@ -252,20 +263,20 @@ def add_fish(old_fish: Optional[Entity], anim: Any, classic_mode: bool = False):
         coll_handler=fish_collision,
     )
 
-    # Ensure fish spawn in valid water area (below water line, above bottom)
-    water_line_bottom = 9  # Bottom of water line
+    water_line_bottom = 9
     screen_bottom = anim.height() - 1
     available_height = screen_bottom - water_line_bottom - fish_entity.height
-    
+
     if available_height > 0:
-        fish_entity.y = random.randint(water_line_bottom, water_line_bottom + available_height)
+        fish_entity.y = random.randint(
+            water_line_bottom, water_line_bottom + available_height
+        )
     else:
         fish_entity.y = water_line_bottom
 
-    # Position fish off-screen on appropriate side
-    if direction == 0:  # Moving right
+    if direction == 0:
         fish_entity.x = -fish_entity.width
-    else:  # Moving left
+    else:
         fish_entity.x = anim.width()
 
     anim.add_entity(fish_entity)
