@@ -95,10 +95,11 @@ That's it! Enjoy your ASCII aquarium! 🐠
 - **`Q`** or **`q`** - Quit the aquarium
 - **`P`** or **`p`** - Pause/unpause the animation
 - **`R`** or **`r`** - Redraw and respawn all entities
+- **`I`** or **`i`** - Show/hide info overlay
 
 ## � Requirements
 
-- **Python 3.7+** - Works with Python 3.7 through 3.14+
+- **Python 3.8+** - Works with Python 3.8 through 3.14+
 - **Terminal** - Any terminal with color support (minimum 40x15, recommended 80x24)
 - **Dependencies** - Automatically handled:
   - `windows-curses` - Auto-installed on Windows (Python < 3.13)
@@ -271,7 +272,7 @@ Most modern terminals support colors. If colors don't appear:
 
 ### Python Version
 
-Make sure you're using Python 3.7 or higher:
+Make sure you're using Python 3.8 or higher:
 
 ```bash
 python --version
@@ -323,15 +324,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-## 📊 Package Information
-
-- **Package Name**: `asciiquarium`
-- **Version**: `2.0.0`
-- **Python**: `>=3.7`
-- **License**: `GPL-3.0-or-later`
-- **Size**: ~50KB
-- **Dependencies**: `windows-curses` (Windows only)
 
 ---
 

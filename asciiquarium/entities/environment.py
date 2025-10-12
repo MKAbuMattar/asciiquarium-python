@@ -23,7 +23,7 @@ def add_environment(anim: Any):
         depth_key = f"water_line{i}"
         if depth_key not in DEPTH:
             depth_key = "water_line0"
-        
+
         anim.new_entity(
             name=f"water_seg_{i}",
             entity_type="waterline",
@@ -64,7 +64,6 @@ WWWWWWW WWWWW W W WWWWWWWWWWWWWW
  W  W   W W W W W W  W  W   WWW
  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"""
 
-    # Position exactly like the original Perl version
     castle_x = anim.width() - 32
     castle_y = anim.height() - 13
 
@@ -72,7 +71,7 @@ WWWWWWW WWWWW W W WWWWWWWWWWWWWW
         name="castle",
         shape=castle_shape,
         color=castle_color,
-        position=[castle_x, castle_y, DEPTH['castle']],
+        position=[castle_x, castle_y, DEPTH["castle"]],
         default_color="BLACK",
     )
 
@@ -99,7 +98,7 @@ def add_seaweed(old_seaweed: Optional[Entity], anim: Any):
     anim.new_entity(
         name=f"seaweed_{random.random()}",
         shape=frames,
-        position=[x, y, DEPTH['seaweed']],
+        position=[x, y, DEPTH["seaweed"]],
         callback_args=[0, 0, 0, anim_speed],
         die_time=time.time() + lifetime,
         death_cb=add_seaweed,

@@ -2,6 +2,7 @@ import argparse
 import platform
 import signal
 import sys
+import threading
 
 from .__version__ import (
     __author__,
@@ -19,6 +20,7 @@ from .entities import (
     add_environment,
     random_object,
 )
+from .version_checker import check_for_updates
 
 
 def setup_aquarium(anim: Animation, classic_mode: bool = False):
@@ -35,7 +37,6 @@ def signal_handler(sig, frame):
     if sig == signal.SIGINT:
         sys.exit(0)
     elif sig == signal.SIGWINCH:
-        # Window resize - ignore for now, let curses handle it
         pass
     else:
         sys.exit(1)
@@ -68,6 +69,7 @@ CONTROLS:
   Q or q  - Quit the aquarium
   P or p  - Pause/unpause animation
   R or r  - Redraw and respawn entities
+  I or i  - Show/hide info screen (press I or ESC to return)
 
 REQUIREMENTS:
   • Python 3.7 or higher
@@ -149,6 +151,12 @@ def create_parser():
         help="Classic mode - use only original fish and monster designs",
     )
 
+    parser.add_argument(
+        "--check-updates",
+        action="store_true",
+        help="Check for available updates and exit",
+    )
+
     return parser
 
 
@@ -161,17 +169,26 @@ def main():
         show_info()
         sys.exit(0)
 
-    # Set up signal handlers like the original
+    if args.check_updates:
+        print("Checking for updates...")
+        latest = check_for_updates(silent=False)
+        if latest is None:
+            print("✓ You are running the latest version!")
+        sys.exit(0)
+
+    update_thread = threading.Thread(target=check_for_updates, daemon=True)
+    update_thread.start()
+
     signal.signal(signal.SIGINT, signal_handler)
-    if hasattr(signal, 'SIGWINCH'):
+    if hasattr(signal, "SIGWINCH"):
         signal.signal(signal.SIGWINCH, signal_handler)
 
     try:
         anim = Animation()
-        # Create a closure to pass classic_mode to setup_aquarium
+
         def setup_with_mode(anim_instance):
             return setup_aquarium(anim_instance, args.classic)
-        
+
         anim.run(setup_with_mode)
     except ImportError as e:
         if "curses" in str(e).lower():
@@ -189,7 +206,7 @@ def main():
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     finally:
-        print("\nThanks for watching! 🐠🐟🦈")
+        update_thread.join(timeout=0.5)
 
 
 def cli_main():
