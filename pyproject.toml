@@ -88,8 +88,9 @@ ignore_missing_imports = true
 
 # Per-module options
 [[tool.mypy.overrides]]
-module = "curses.*"
+module = ["curses", "curses.*", "windows_curses", "windows_curses.*"]
 ignore_missing_imports = true
+ignore_errors = true
 
 [dependency-groups]
 dev = []

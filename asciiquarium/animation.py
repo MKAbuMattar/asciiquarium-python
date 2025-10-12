@@ -3,16 +3,16 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 
 try:
-    import curses
+    import curses  # type: ignore
 except ImportError:
     if sys.platform == "win32":
         try:
-            import windows_curses as curses
-        except ImportError:
+            import windows_curses as curses  # type: ignore
+        except ImportError as e:
             raise ImportError(
                 "Curses support is not available. On Windows with Python 3.13+, "
                 "you may need to install windows-curses manually or use Python 3.12 or earlier."
-            )
+            ) from e
     else:
         raise
 
@@ -61,14 +61,14 @@ class Animation:
     def _init_color_pairs(self) -> None:
         """Initialize color pair mappings"""
         self.color_map = {
-            "BLACK": curses.COLOR_BLACK,
-            "RED": curses.COLOR_RED,
-            "GREEN": curses.COLOR_GREEN,
-            "YELLOW": curses.COLOR_YELLOW,
-            "BLUE": curses.COLOR_BLUE,
-            "MAGENTA": curses.COLOR_MAGENTA,
-            "CYAN": curses.COLOR_CYAN,
-            "WHITE": curses.COLOR_WHITE,
+            "BLACK": curses.COLOR_BLACK,  # type: ignore
+            "RED": curses.COLOR_RED,  # type: ignore
+            "GREEN": curses.COLOR_GREEN,  # type: ignore
+            "YELLOW": curses.COLOR_YELLOW,  # type: ignore
+            "BLUE": curses.COLOR_BLUE,  # type: ignore
+            "MAGENTA": curses.COLOR_MAGENTA,  # type: ignore
+            "CYAN": curses.COLOR_CYAN,  # type: ignore
+            "WHITE": curses.COLOR_WHITE,  # type: ignore
         }
 
         self.mask_color_map = {
@@ -225,24 +225,27 @@ class Animation:
                     if color_char in self.mask_color_map:
                         color_name = self.mask_color_map[color_char]
                         if color_name in self.color_pairs:
-                            color_attr = curses.color_pair(self.color_pairs[color_name])
+                            color_attr = curses.color_pair(self.color_pairs[color_name])  # type: ignore
 
                 if color_attr == 0 and entity.default_color in self.color_pairs:
-                    color_attr = curses.color_pair(
+                    color_attr = curses.color_pair(  # type: ignore
                         self.color_pairs[entity.default_color]
                     )
 
                 try:
                     char_code = ord(char)
                     if 32 <= char_code <= 126:
-                        self.screen.addch(draw_y, draw_x, char, color_attr)
+                        if self.screen:
+                            self.screen.addch(draw_y, draw_x, char, color_attr)
                     elif char_code > 126:
                         try:
-                            self.screen.addch(draw_y, draw_x, char, color_attr)
-                        except (curses.error, UnicodeEncodeError):
-                            self.screen.addch(draw_y, draw_x, " ", color_attr)
+                            if self.screen:
+                                self.screen.addch(draw_y, draw_x, char, color_attr)
+                        except (curses.error, UnicodeEncodeError):  # type: ignore
+                            if self.screen:
+                                self.screen.addch(draw_y, draw_x, " ", color_attr)
                 except (
-                    curses.error,
+                    curses.error,  # type: ignore
                     ValueError,
                     TypeError,
                     OverflowError,
@@ -363,7 +366,6 @@ class Animation:
 
             paused = False
             showing_info = False
-            last_time = time.time()
 
             try:
                 while self.running:
@@ -412,6 +414,6 @@ class Animation:
                 self.running = False
 
         try:
-            curses.wrapper(_run)
+            curses.wrapper(_run)  # type: ignore
         except KeyboardInterrupt:
             pass

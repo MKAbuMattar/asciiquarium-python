@@ -1,5 +1,4 @@
-import time
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 
 class Entity:
@@ -13,7 +12,7 @@ class Entity:
         color: Union[str, List[str]] = "",
         position: Optional[List[int]] = None,
         callback: Optional[Callable] = None,
-        callback_args: Optional[List[float]] = None,
+        callback_args: Optional[Union[List[float], Dict[str, Any]]] = None,
         die_time: Optional[float] = None,
         die_offscreen: bool = False,
         die_frame: Optional[int] = None,
@@ -56,7 +55,7 @@ class Entity:
             self.z = position[2] if len(position) > 2 else 0
 
         self.callback = callback
-        self.callback_args: List[float]
+        self.callback_args: Union[List[float], Dict[str, Any]]
         if callback_args is None:
             self.callback_args = [0, 0, 0, 0.5]
         else:
@@ -72,7 +71,7 @@ class Entity:
         self.frame_time: float = 0.0
         self.frame_count: int = 0
 
-        self.collision_list: List["Entity"] = []
+        self.collision_list: List[Entity] = []
 
         self._update_dimensions()
 
@@ -109,16 +108,18 @@ class Entity:
 
     def move_entity(self, anim: Any) -> bool:
         """Move entity based on callback_args [dx, dy, dz, frame_speed]"""
-        if len(self.callback_args) >= 3:
-            self.x += self.callback_args[0]
-            self.y += self.callback_args[1]
-            self.z += self.callback_args[2]
+        # Only process if callback_args is a list (not a dict)
+        if isinstance(self.callback_args, list):
+            if len(self.callback_args) >= 3:
+                self.x += self.callback_args[0]
+                self.y += self.callback_args[1]
+                self.z += self.callback_args[2]
 
-        if len(self.callback_args) >= 4 and self.callback_args[3] > 0:
-            self.frame_time += self.callback_args[3]
-            if self.frame_time >= 1.0:
-                self.current_frame += 1
-                self.frame_time = 0.0
+            if len(self.callback_args) >= 4 and self.callback_args[3] > 0:
+                self.frame_time += self.callback_args[3]
+                if self.frame_time >= 1.0:
+                    self.current_frame += 1
+                    self.frame_time = 0.0
                 self.frame_count += 1
         elif len(self.shapes) > 1:
             self.frame_time += 0.1

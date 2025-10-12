@@ -11,7 +11,7 @@ def get_latest_version() -> Optional[str]:
         url = "https://pypi.org/pypi/asciiquarium/json"
         with urllib.request.urlopen(url, timeout=2) as response:
             data = json.loads(response.read().decode())
-            return data["info"]["version"]
+            return str(data["info"]["version"])
     except (URLError, json.JSONDecodeError, KeyError, TimeoutError):
         return None
 
@@ -49,17 +49,13 @@ def check_for_updates(silent: bool = False) -> Optional[str]:
                 "║                                                                     ║"
             )
             print(
-                "║          <°))))><         v{:<10}          ><(((°>              ║".format(
-                    latest_version
-                )
+                f"║          <°))))><         v{latest_version:<10}          ><(((°>              ║"
             )
             print(
                 "║                                                                     ║"
             )
             print(
-                "║       Current: v{:<10}      →      Latest: v{:<10}          ║".format(
-                    __version__, latest_version
-                )
+                f"║       Current: v{__version__:<10}      →      Latest: v{latest_version:<10}          ║"
             )
             print(
                 "║                                                                     ║"
@@ -71,7 +67,7 @@ def check_for_updates(silent: bool = False) -> Optional[str]:
                 "║                                                                     ║"
             )
             print(
-                "║         pipx install --upgrade asciiquarium                         ║"
+                "║         pipx upgrade asciiquarium                                   ║"
             )
             print(
                 "║                            or                                       ║"

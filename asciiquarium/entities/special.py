@@ -1,5 +1,5 @@
 import random
-from typing import Any, Optional
+from typing import Any, Callable, List, Optional
 
 from ..animation import DEPTH
 from ..entity import Entity
@@ -558,12 +558,11 @@ def retract(entity: Entity, anim: Any):
 
     if entity.entity_type == "fish":
         x, y, z = entity.position()
-        z = DEPTH["water_gap2"]
-        entity.set_position(x, y, z)
+        entity.z = DEPTH["water_gap2"]
         entity.callback = fishhook_cb
-        entity.callback_args = "hooked"
+        entity.callback_args = {"mode": "hooked"}
     else:
-        entity.callback_args = "hooked"
+        entity.callback_args = {"mode": "hooked"}
 
 
 def group_death(entity: Entity, anim: Any, bound_types: list):
@@ -579,13 +578,13 @@ def add_ducks(old_ent: Optional[Entity], anim: Any):
     """Add three animated ducks swimming on the surface"""
     duck_shapes = [
         [
-            """      _          _          _  
+            """      _          _          _
 ,____(')=  ,____(')=  ,____(')<
  \\~~= ')    \\~~= ')    \\~~= ')""",
-            """      _          _          _  
+            """      _          _          _
 ,____(')=  ,____(')<  ,____(')=
  \\~~= ')    \\~~= ')    \\~~= ')""",
-            """      _          _          _  
+            """      _          _          _
 ,____(')<  ,____(')=  ,____(')=
  \\~~= ')    \\~~= ')    \\~~= ')""",
         ],
@@ -662,7 +661,7 @@ def add_dolphins(old_ent: Optional[Entity], anim: Any):
     x = -13 if direction == 0 else anim.width() - 2
     distance = 15 if direction == 0 else -15
 
-    dolphin3 = anim.new_entity(
+    anim.new_entity(
         shape=dolphin_shapes[direction],
         auto_trans=True,
         color=dolphin_colors[direction],
@@ -673,7 +672,7 @@ def add_dolphins(old_ent: Optional[Entity], anim: Any):
         default_color="blue",
     )
 
-    dolphin2 = anim.new_entity(
+    anim.new_entity(
         shape=dolphin_shapes[direction],
         auto_trans=True,
         color=dolphin_colors[direction],
@@ -684,7 +683,7 @@ def add_dolphins(old_ent: Optional[Entity], anim: Any):
         default_color="BLUE",
     )
 
-    dolphin1 = anim.new_entity(
+    anim.new_entity(
         shape=dolphin_shapes[direction],
         auto_trans=True,
         color=dolphin_colors[direction],
@@ -736,7 +735,7 @@ def add_swan(old_ent: Optional[Entity], anim: Any):
     )
 
 
-RANDOM_OBJECTS = [
+RANDOM_OBJECTS: List[Callable[[Optional[Entity], Any], None]] = [
     add_ship,
     add_whale,
     add_monster,
@@ -749,7 +748,7 @@ RANDOM_OBJECTS = [
 ]
 
 
-def random_object(dead_object: Optional[Entity], anim: Any):
+def random_object(dead_object: Optional[Entity], anim: Any) -> None:
     """Spawn a random special object"""
-    spawner = random.choice(RANDOM_OBJECTS)
+    spawner: Callable[[Optional[Entity], Any], None] = random.choice(RANDOM_OBJECTS)
     spawner(dead_object, anim)

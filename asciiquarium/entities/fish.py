@@ -15,7 +15,7 @@ def add_bubble(fish: Entity, anim: Any):
     bubble_y = fish_y + fish_h // 2
     bubble_z = fish_z - 1
 
-    if cb_args[0] > 0:
+    if isinstance(cb_args, list) and cb_args[0] > 0:
         bubble_x += fish_w
 
     anim.new_entity(
