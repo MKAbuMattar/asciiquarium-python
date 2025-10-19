@@ -626,75 +626,6 @@ ygcgwwwww  ygcgwwwww  ygcgwwwww
     )
 
 
-def add_dolphins(old_ent: Optional[Entity], anim: Any):
-    """Add three dolphins jumping in formation"""
-    dolphin_shapes = [
-        [
-            r"""        ,
-      __)\
-(\_.-'    a`-.
-(/~~````(/~^^`""",
-            r"""        ,
-(\__  __)\
-(/~.''    a`-.
-    ````\)~^^`""",
-        ],
-        [
-            r"""     ,
-   _/(__
-.-'a    `-._/)
-'^^~\)''''~~\)""",
-            r"""     ,
-   _/(__  __/)
-.-'a    ``.~\)
-'^^~(/''''""",
-        ],
-    ]
-
-    dolphin_colors = [
-        "\n\n\n          W",
-        "\n\n\n   W",
-    ]
-
-    direction = random.randint(0, 1)
-    speed = 2.0 if direction == 0 else -2.0
-    x = -13 if direction == 0 else anim.width() - 2
-    distance = 15 if direction == 0 else -15
-
-    anim.new_entity(
-        shape=dolphin_shapes[direction],
-        auto_trans=True,
-        color=dolphin_colors[direction],
-        position=[x - (distance * 2), 5, DEPTH["water_gap3"]],
-        callback_args=[speed, 0, 0, 0.5],
-        death_cb=random_object,
-        die_offscreen=True,
-        default_color="blue",
-    )
-
-    anim.new_entity(
-        shape=dolphin_shapes[direction],
-        auto_trans=True,
-        color=dolphin_colors[direction],
-        position=[x - distance, 5, DEPTH["water_gap3"]],
-        callback_args=[speed, 0, 0, 0.5],
-        death_cb=None,
-        die_offscreen=True,
-        default_color="BLUE",
-    )
-
-    anim.new_entity(
-        shape=dolphin_shapes[direction],
-        auto_trans=True,
-        color=dolphin_colors[direction],
-        position=[x, 5, DEPTH["water_gap3"]],
-        callback_args=[speed, 0, 0, 0.5],
-        death_cb=None,
-        die_offscreen=True,
-        default_color="CYAN",
-    )
-
-
 def add_swan(old_ent: Optional[Entity], anim: Any):
     """Add an elegant swan swimming on the surface"""
     swan_shapes = [
@@ -744,7 +675,6 @@ RANDOM_OBJECTS: List[Callable[[Optional[Entity], Any], None]] = [
     add_fishhook,
     add_swan,
     add_ducks,
-    add_dolphins,
 ]
 
 
