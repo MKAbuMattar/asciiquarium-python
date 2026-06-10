@@ -1,5 +1,5 @@
 import random
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 from ..animation import DEPTH
 from ..entity import Entity
@@ -38,22 +38,199 @@ def bubble_collision(bubble: Entity, anim: Any):
             break
 
 
+FOOD_DETECTION_RANGE = 30
+FOOD_VERTICAL_SPEED = 0.25
+FOOD_CHASE_BOOST = 0.30
+
+
+def find_nearest_food(fish: Entity, anim: Any) -> Optional[Entity]:
+    """Find the best food flake for this fish to chase.
+
+    Fish strongly prefer food in front of them, but they may still notice
+    food behind them if it is very close.
+    """
+    foods = anim.get_entities_of_type("food")
+    if not foods:
+        return None
+
+    fish_x, fish_y, _ = fish.position()
+    fish_w, fish_h = fish.size()
+    fish_center_x = fish_x + fish_w // 2
+    fish_center_y = fish_y + fish_h // 2
+
+    base_dx = getattr(fish, "base_dx", None)
+    if base_dx is None and isinstance(fish.callback_args, list) and fish.callback_args:
+        base_dx = fish.callback_args[0]
+
+    swimming_right = True if base_dx is None else base_dx > 0
+
+    nearest_food = None
+    best_score = FOOD_DETECTION_RANGE + 1
+
+    for food in foods:
+        food_x, food_y, _ = food.position()
+
+        horizontal_distance = abs(food_x - fish_center_x)
+        vertical_distance = abs(food_y - fish_center_y)
+        distance = horizontal_distance + vertical_distance
+
+        food_is_ahead = (
+            swimming_right and food_x >= fish_center_x
+        ) or (
+            not swimming_right and food_x <= fish_center_x
+        )
+
+        # Ignore food outside normal detection range.
+        if distance > FOOD_DETECTION_RANGE:
+            continue
+
+        if food_is_ahead:
+            # Food in front is attractive.
+            score = distance
+        else:
+            # Food behind the fish is much less attractive.
+            # Only chase it if it is quite close.
+            if distance > FOOD_DETECTION_RANGE // 3:
+                continue
+
+            score = distance + 15
+
+        if score < best_score:
+            best_score = score
+            nearest_food = food
+
+    return nearest_food
+
+
+def fish_mouth_position(fish: Entity) -> Tuple[int, int]:
+    """Return the approximate mouth position of a fish.
+
+    The mouth is assumed to be vertically centered on the fish and at the
+    front edge of the fish, based on the fish's swimming direction.
+    """
+    fish_x, fish_y, _ = fish.position()
+    fish_w, fish_h = fish.size()
+
+    mouth_y = fish_y + fish_h // 2
+
+    # Prefer the original speed/direction if we stored it when creating the fish.
+    # This avoids a temporarily boosted food-chase speed confusing the direction.
+    base_dx = getattr(fish, "base_dx", None)
+    if base_dx is None and isinstance(fish.callback_args, list) and fish.callback_args:
+        base_dx = fish.callback_args[0]
+
+    swimming_right = True if base_dx is None else base_dx > 0
+    mouth_x = fish_x + fish_w - 1 if swimming_right else fish_x
+
+    return mouth_x, mouth_y
+
+
+def food_touches_fish_mouth(fish: Entity, food: Entity) -> bool:
+    """Return True if food touches the approximate mouth area of the fish.
+
+    Uses a small hitbox around the estimated mouth because ASCII fish have
+    irregular shapes and fractional movement is rounded to integer positions.
+    """
+    food_x, food_y, _ = food.position()
+    mouth_x, mouth_y = fish_mouth_position(fish)
+
+    mouth_x_tolerance = 2
+    mouth_y_tolerance = 1
+
+    return (
+        abs(food_x - mouth_x) <= mouth_x_tolerance
+        and abs(food_y - mouth_y) <= mouth_y_tolerance
+    )
+
+
+def add_food_bubble(food: Entity, anim: Any):
+    """Add a bubble at the location where food was eaten."""
+    food_x, food_y, food_z = food.position()
+
+    anim.new_entity(
+        entity_type="bubble",
+        shape=[".", "o", "O", "O", "O"],
+        position=[food_x, food_y, food_z - 1],
+        callback_args=[0, -1, 0, 0.1],
+        die_offscreen=True,
+        physical=True,
+        coll_handler=bubble_collision,
+        default_color="CYAN",
+    )
+    
+    
 def fish_callback(fish: Entity, anim: Any) -> bool:
-    """Fish behavior - occasionally blow bubbles (matches original probability)"""
+    """Fish behavior - blow bubbles and react to nearby food."""
     if random.randint(1, 100) > 97:
         add_bubble(fish, anim)
+
+    if not isinstance(fish.callback_args, list):
+        return fish.move_entity(anim)
+
+    # Store the fish's original horizontal speed once, so food-chasing boosts
+    # do not accumulate every frame.
+    if not hasattr(fish, "base_dx"):
+        fish.base_dx = fish.callback_args[0] if fish.callback_args else 0
+
+    base_dx = fish.base_dx
+    nearest_food = find_nearest_food(fish, anim)
+
+    if nearest_food:
+        fish_x, fish_y, _ = fish.position()
+        fish_w, fish_h = fish.size()
+        fish_center_x = fish_x + fish_w // 2
+        fish_center_y = fish_y + fish_h // 2
+
+        food_x, food_y, _ = nearest_food.position()
+
+        # Nudge vertically toward the food.
+        if food_y > fish_center_y:
+            fish.callback_args[1] = FOOD_VERTICAL_SPEED
+        elif food_y < fish_center_y:
+            fish.callback_args[1] = -FOOD_VERTICAL_SPEED
+        else:
+            fish.callback_args[1] = 0
+
+        # Slightly speed up if the food is in front of the fish.
+        swimming_right = base_dx > 0
+        food_is_ahead = (
+            swimming_right and food_x > fish_center_x
+        ) or (
+            not swimming_right and food_x < fish_center_x
+        )
+
+        if food_is_ahead:
+            if swimming_right:
+                fish.callback_args[0] = abs(base_dx) + FOOD_CHASE_BOOST
+            else:
+                fish.callback_args[0] = -abs(base_dx) - FOOD_CHASE_BOOST
+        else:
+            fish.callback_args[0] = base_dx
+    else:
+        # No food nearby; resume normal straight swimming.
+        fish.callback_args[0] = base_dx
+        fish.callback_args[1] = 0
+
     return fish.move_entity(anim)
 
 
 def fish_collision(fish: Entity, anim: Any):
-    """Handle fish collision with predators and fishing hook"""
+    """Handle fish collision with predators, fishing hook, and food."""
     from .special import retract
 
     for col_obj in fish.collisions():
-        if col_obj.entity_type == "teeth" and fish.height <= 5:
+        if col_obj.entity_type == "food":
+            if food_touches_fish_mouth(fish, col_obj):
+                add_munch(anim, fish)
+                add_food_bubble(col_obj, anim)
+                col_obj.kill()
+                break
+
+        elif col_obj.entity_type == "teeth" and fish.height <= 5:
             add_splat(anim, *col_obj.position())
             fish.kill()
             break
+
         elif col_obj.entity_type == "hook_point":
             retract(col_obj, anim)
             retract(fish, anim)
@@ -67,6 +244,76 @@ def fish_collision(fish: Entity, anim: Any):
                 retract(lines[0], anim)
             break
 
+
+def munch_callback(munch: Entity, anim: Any) -> bool:
+    """Keep the munch animation attached to the fish's mouth.
+
+    The munch entity may update before the fish moves during this frame,
+    so this predicts the fish's next mouth position to avoid visual lag.
+    """
+    if not isinstance(munch.callback_args, dict):
+        return munch.move_entity(anim)
+
+    fish = munch.callback_args.get("fish")
+
+    if fish is None or not fish.is_alive:
+        munch.kill()
+        return True
+
+    mouth_x, mouth_y = fish_mouth_position(fish)
+    _, _, fish_z = fish.position()
+
+    predicted_dx = 0
+    predicted_dy = 0
+
+    if isinstance(fish.callback_args, list):
+        if len(fish.callback_args) > 0:
+            predicted_dx = fish.callback_args[0]
+        if len(fish.callback_args) > 1:
+            predicted_dy = fish.callback_args[1]
+
+    munch.x = mouth_x + predicted_dx
+    munch.y = mouth_y + predicted_dy
+    munch.z = fish_z - 1
+
+    # Advance animation frames.
+    frame_speed = munch.callback_args.get("frame_speed", 0.35)
+    munch.frame_time += frame_speed
+
+    if munch.frame_time >= 1.0:
+        munch.current_frame += 1
+        munch.frame_time = 0.0
+
+    munch.frame_count += 1
+
+    return True
+    
+
+def add_munch(anim: Any, fish: Entity):
+    """Create a small munch animation attached to the fish's mouth."""
+    mouth_x, mouth_y = fish_mouth_position(fish)
+    _, _, fish_z = fish.position()
+
+    munch_frames = [
+        "*",
+        "+",
+        ".",
+    ]
+
+    anim.new_entity(
+        entity_type="munch",
+        shape=munch_frames,
+        position=[mouth_x, mouth_y, fish_z - 1],
+        callback=munch_callback,
+        callback_args={
+            "fish": fish,
+            "frame_speed": 0.35,
+        },
+        default_color="YELLOW",
+        auto_trans=True,
+        die_frame=len(munch_frames),
+    )
+    
 
 def add_splat(anim: Any, x: int, y: int, z: int):
     """Create a splat animation when fish is eaten"""
@@ -262,6 +509,8 @@ def add_fish(old_fish: Optional[Entity], anim: Any, classic_mode: bool = False):
         physical=True,
         coll_handler=fish_collision,
     )
+
+    fish_entity.base_dx = speed
 
     water_line_bottom = 9
     screen_bottom = anim.height() - 1

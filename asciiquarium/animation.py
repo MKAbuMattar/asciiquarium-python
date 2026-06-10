@@ -1,5 +1,7 @@
 import sys
 import time
+import math
+import random
 from typing import Any, Callable, Dict, List, Optional
 
 try:
@@ -327,6 +329,7 @@ class Animation:
                 "    Q or q  - Quit the aquarium",
                 "    P or p  - Pause/unpause animation",
                 "    R or r  - Redraw and respawn entities",
+                "    F or f  - Drop food",
                 "    I or i  - Show/hide this info screen",
                 "",
                 "  CREDITS:",
@@ -391,6 +394,9 @@ class Animation:
                                 else:
                                     paused = False
                                     self.redraw_screen()
+                            elif key_char == "f":
+                                from .entities.food import add_food
+                                add_food(None, self)
                             elif key == 27:
                                 if showing_info:
                                     showing_info = False
