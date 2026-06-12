@@ -62,6 +62,8 @@ An aquarium/sea animation in ASCII art for your terminal! This is a Python reimp
 - � Blue bubbles rising from fish
 - 🎨 Full color support
 - ⌨️ Interactive controls
+- 🍣 Feeding support: press `F` to drop food into the aquarium.
+- 🐟 Fish can detect nearby food, swim toward it, and eat it.
 - 🌍 Cross-platform (Windows, Linux, macOS)
 
 ## 🚀 Installation
@@ -96,6 +98,7 @@ That's it! Enjoy your ASCII aquarium! 🐠
 - **`P`** or **`p`** - Pause/unpause the animation
 - **`R`** or **`r`** - Redraw and respawn all entities
 - **`I`** or **`i`** - Show/hide info overlay
+- **`F`** or **`f`** - Feed the fish
 
 ## � Requirements
 
@@ -114,6 +117,12 @@ pip install windows-curses
 ```
 
 If you encounter issues, consider using Python 3.12 or earlier for the most stable experience.
+
+### 🤏 OpenGhost Gesture-Control Note
+
+The feeding feature can be used with an external gesture-control program such as OpenGhost. In the setup tested with this fork, OpenGhost uses the Raspberry Pi camera to detect a pinch-and-release gesture between the thumb and index finger, then sends the `F` key to an `xterm` window running asciiquarium.
+
+For the Raspberry Pi camera/OpenGhost integration tested with this fork, Raspberry Pi OS Bookworm with Python 3.11 is recommended. This limitation applies to the OpenGhost/MediaPipe/Picamera2 gesture-control stack, not necessarily to asciiquarium itself.
 
 ## 🌍 Platform Support
 
