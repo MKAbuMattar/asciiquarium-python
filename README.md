@@ -137,6 +137,7 @@ https://github.com/klwill1192/OpenGhost/tree/pinch-release-keypress
 ```text
 Pinch thumb and index finger, then release     Drop food into the aquarium
 Hold a two-finger "peace sign" gesture         Quit the aquarium ("Peace out!")
+Hold a closed fist gesture                     Shut down the Raspberry Pi
 ```
 
 The OpenGhost controller displays a small status flag over the castle:
@@ -144,11 +145,13 @@ The OpenGhost controller displays a small status flag over the castle:
 ```text
 Black flag     No hand detected by the camera
 Green flag     Hand detected / normal operation
-Yellow flag    Peace sign shutdown gesture has been held for 2 seconds
-Red flag       Peace sign has been held for 4 seconds; shutdown is imminent
+Yellow flag    Shutdown gesture has been held for 2 seconds
+Red flag       Shutdown gesture has been held for 4 seconds; shutdown is imminent
 ```
 
 After the peace sign gesture is held for 5 seconds, OpenGhost sends `q` to the asciiquarium xterm window and exits cleanly. Peace out!
+
+After the closed fist gesture is held for 7 seconds, OpenGhost requests a clean Raspberry Pi shutdown.
 
 ## 🌍 Platform Support
 
