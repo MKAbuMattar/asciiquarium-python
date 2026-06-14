@@ -120,9 +120,35 @@ If you encounter issues, consider using Python 3.12 or earlier for the most stab
 
 ### 🤏 OpenGhost Gesture-Control Note
 
-The feeding feature can be used with an external gesture-control program such as OpenGhost. In the setup tested with this fork, OpenGhost uses the Raspberry Pi camera to detect a pinch-and-release gesture between the thumb and index finger, then sends the `F` key to an `xterm` window running asciiquarium.
+This fork adds feeding behavior to asciiquarium.
 
-For the Raspberry Pi camera/OpenGhost integration tested with this fork, Raspberry Pi OS Bookworm with Python 3.11 is recommended. This limitation applies to the OpenGhost/MediaPipe/Picamera2 gesture-control stack, not necessarily to asciiquarium itself.
+New keyboard control:
+
+```text
+F or f    Drop food into the aquarium
+```
+
+When used with the OpenGhost Raspberry Pi controller, the aquarium can also be controlled by hand gestures. Hand gesture support requires the modified OpenGhost controller code from the `pinch-release-keypress` branch of this repository:
+
+```text
+https://github.com/klwill1192/OpenGhost/tree/pinch-release-keypress
+```
+	
+```text
+Pinch thumb and index finger, then release     Drop food into the aquarium
+Hold a two-finger "peace sign" gesture         Quit the aquarium ("Peace out!")
+```
+
+The OpenGhost controller displays a small status flag over the castle:
+
+```text
+Black flag     No hand detected by the camera
+Green flag     Hand detected / normal operation
+Yellow flag    Peace sign shutdown gesture has been held for 2 seconds
+Red flag       Peace sign has been held for 4 seconds; shutdown is imminent
+```
+
+After the peace sign gesture is held for 5 seconds, OpenGhost sends `q` to the asciiquarium xterm window and exits cleanly. Peace out!
 
 ## 🌍 Platform Support
 
