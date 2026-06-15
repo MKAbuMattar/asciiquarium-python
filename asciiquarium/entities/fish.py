@@ -41,6 +41,8 @@ def bubble_collision(bubble: Entity, anim: Any):
 FOOD_DETECTION_RANGE = 30
 FOOD_VERTICAL_SPEED = 0.25
 FOOD_CHASE_BOOST = 0.30
+HAPPY_FISH_SPEED_BOOST = 0.50
+HAPPY_FISH_BUBBLE_THRESHOLD = 92
 
 
 def find_nearest_food(fish: Entity, anim: Any) -> Optional[Entity]:
@@ -161,7 +163,9 @@ def add_food_bubble(food: Entity, anim: Any):
     
 def fish_callback(fish: Entity, anim: Any) -> bool:
     """Fish behavior - blow bubbles and react to nearby food."""
-    if random.randint(1, 100) > 97:
+    happy_fish_active = bool(getattr(anim, "happy_fish_active", lambda: False)())
+    bubble_threshold = HAPPY_FISH_BUBBLE_THRESHOLD if happy_fish_active else 97
+    if random.randint(1, 100) > bubble_threshold:
         add_bubble(fish, anim)
 
     if not isinstance(fish.callback_args, list):
@@ -207,9 +211,19 @@ def fish_callback(fish: Entity, anim: Any) -> bool:
         else:
             fish.callback_args[0] = base_dx
     else:
-        # No food nearby; resume normal straight swimming.
-        fish.callback_args[0] = base_dx
-        fish.callback_args[1] = 0
+        # Happy Fish mode: swim a little faster when not chasing food.
+        if happy_fish_active:
+            if base_dx > 0:
+                fish.callback_args[0] = base_dx + HAPPY_FISH_SPEED_BOOST
+            elif base_dx < 0:
+                fish.callback_args[0] = base_dx - HAPPY_FISH_SPEED_BOOST
+            else:
+                fish.callback_args[0] = base_dx
+            fish.callback_args[1] = 0
+        else:
+            # No food nearby; resume normal straight swimming.
+            fish.callback_args[0] = base_dx
+            fish.callback_args[1] = 0
 
     return fish.move_entity(anim)
 

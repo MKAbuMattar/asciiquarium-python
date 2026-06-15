@@ -55,6 +55,7 @@ class Animation:
         self.entities: List[Entity] = []
         self.color_enabled = True
         self.running = False
+        self.happy_fish_until: float = 0.0
         self.screen_width: int = 0
         self.screen_height: int = 0
         self.color_pairs: Dict[str, int] = {}
@@ -306,40 +307,51 @@ class Animation:
                 except curses.error:
                     pass
 
+            INFO_WIDTH = 70
+
+            def info_line(text: str = "", width: int = INFO_WIDTH, boxed: bool = False) -> str:
+                padded = text[:width].ljust(width)
+
+                if boxed:
+                    return f"║ {padded} ║"
+
+                return padded
+
             info_lines = [
-                "╔═══════════════════════════════════════════════════════════════════════╗",
-                "║                                                                       ║",
-                f"║   🐠 Asciiquarium {__version__} - ASCII Art Aquarium Animation                ║",
-                "║                                                                       ║",
-                "╚═══════════════════════════════════════════════════════════════════════╝",
+                "╔" + "═" * (INFO_WIDTH + 2) + "╗",
+                info_line("", INFO_WIDTH, boxed=True),
+                info_line(f"  🐠 Asciiquarium {__version__} - ASCII Art Aquarium Animation", INFO_WIDTH-1, boxed=True),
+                info_line("", INFO_WIDTH, boxed=True),
+                "╚" + "═" * (INFO_WIDTH + 2) + "╝",
                 "",
-                "  An aquarium/sea animation in ASCII art for your terminal!",
+                info_line("  An aquarium/sea animation in ASCII art for your terminal!", INFO_WIDTH),
                 "",
-                "  FEATURES:",
-                "    • Multiple fish species with different sizes and colors",
-                "    • Sharks that hunt small fish",
-                "    • Whales with animated water spouts",
-                "    • Ships sailing on the surface",
-                "    • Sea monsters lurking in the depths",
-                "    • Animated blue water lines and seaweed",
-                "    • Castle decoration",
-                "    • Blue bubbles rising from fish",
+                info_line("FEATURES: ", INFO_WIDTH),
+                info_line("  • Multiple fish species with different sizes and colors ", INFO_WIDTH),
+                info_line("  • Sharks that hunt small fish ", INFO_WIDTH),
+                info_line("  • Whales with animated water spouts ", INFO_WIDTH),
+                info_line("  • Ships sailing on the surface ", INFO_WIDTH),
+                info_line("  • Sea monsters lurking in the depths ", INFO_WIDTH),
+                info_line("  • Animated blue water lines and seaweed ", INFO_WIDTH),
+                info_line("  • Castle decoration ", INFO_WIDTH),
+                info_line("  • Blue bubbles rising from fish ", INFO_WIDTH),
                 "",
-                "  CONTROLS:",
-                "    Q or q  - Quit the aquarium",
-                "    P or p  - Pause/unpause animation",
-                "    R or r  - Redraw and respawn entities",
-                "    F or f  - Drop food",
-                "    I or i  - Show/hide this info screen",
+                info_line("CONTROLS: ", INFO_WIDTH),
+                info_line("  Q or q  - Quit the aquarium ", INFO_WIDTH),
+                info_line("  P or p  - Pause/unpause animation ", INFO_WIDTH),
+                info_line("  R or r  - Redraw and respawn entities ", INFO_WIDTH),
+                info_line("  F or f  - Drop food ", INFO_WIDTH),
+                info_line("  H or h  - Happy Fish mode ", INFO_WIDTH),
+                info_line("  I or i  - Show/hide this info screen ", INFO_WIDTH),
                 "",
-                "  CREDITS:",
-                f"    Python Port     : {__author__} <{__email__}>",
-                f"    Original Author : {__original_author__}",
-                f"    Original Project: {__original_project__}",
+                info_line("CREDITS: ", INFO_WIDTH),
+                info_line(f"  Python Port     : {__author__} <{__email__}>", INFO_WIDTH),
+                info_line(f"  Original Author : {__original_author__}", INFO_WIDTH),
+                info_line(f"  Original Project: {__original_project__}", INFO_WIDTH),
                 "",
-                "  LICENSE: " + __license__,
+                info_line("LICENSE: " + __license__, INFO_WIDTH),
                 "",
-                "  Press 'I' or ESC to return to aquarium...",
+                info_line("  Press 'I' or ESC to return to aquarium... ", INFO_WIDTH)
             ]
 
             start_y = max(0, (height - len(info_lines)) // 2)
@@ -357,6 +369,14 @@ class Animation:
 
         except curses.error:
             pass
+
+    def start_happy_fish(self) -> None:
+        """Start a short Happy Fish celebration mode."""
+        self.happy_fish_until = time.time() + 8.0
+
+    def happy_fish_active(self) -> bool:
+        """Return True while Happy Fish mode is active."""
+        return time.time() < self.happy_fish_until
 
     def run(self, setup_callback: Callable):
         """Main animation loop"""
@@ -397,6 +417,8 @@ class Animation:
                             elif key_char == "f":
                                 from .entities.food import add_food
                                 add_food(None, self)
+                            elif key_char == "h":
+                                self.start_happy_fish()
                             elif key == 27:
                                 if showing_info:
                                     showing_info = False
