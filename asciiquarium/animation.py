@@ -28,6 +28,7 @@ from .__version__ import (
 )
 from .entity import Entity
 
+
 DEPTH = {
     "gui_text": 0,
     "gui": 1,
@@ -56,6 +57,7 @@ class Animation:
         self.color_enabled = True
         self.running = False
         self.happy_fish_until: float = 0.0
+        self.frame_count: int = 0
         self.screen_width: int = 0
         self.screen_height: int = 0
         self.color_pairs: Dict[str, int] = {}
@@ -273,6 +275,9 @@ class Animation:
 
         current_time = time.time()
 
+        self.frame_count += 1
+        self.update_happy_fish_entity_effects()
+
         for entity in self.entities[:]:
             entity.update(self)
 
@@ -370,13 +375,78 @@ class Animation:
         except curses.error:
             pass
 
+
     def start_happy_fish(self) -> None:
         """Start a short Happy Fish celebration mode."""
         self.happy_fish_until = time.time() + 8.0
 
+        # Queue one-time celebration effects for ordinary fish and whales.
+        for entity in self.entities:
+            if entity.entity_type in ("fish", "whale", "dolphin", "old_monster", "new_monster", "big_fish", "big_fish_2"):
+                setattr(entity, "happy_fish_burst_pending", True)
+
     def happy_fish_active(self) -> bool:
         """Return True while Happy Fish mode is active."""
         return time.time() < self.happy_fish_until
+
+    def update_happy_fish_entity_effects(self) -> None:
+        # Keep Happy Fish effects for special animated entities here.
+        # Ordinary fish rainbow/dance is handled in fish_callback().
+        happy = self.happy_fish_active()
+        rainbow_mask_chars = ["r", "y", "g", "c", "b", "m", "w"]
+        rainbow_default_colors = ["RED", "YELLOW", "GREEN", "CYAN", "BLUE", "MAGENTA", "WHITE"]
+        happy_special_types = ("whale", "dolphin", "old_monster", "new_monster", "big_fish", "big_fish_2")
+
+        for entity in self.entities:
+            entity_type = getattr(entity, "entity_type", "")
+            if entity_type not in happy_special_types:
+                continue
+
+            if not hasattr(entity, "base_default_color"):
+                entity.base_default_color = getattr(entity, "default_color", None)
+            if not hasattr(entity, "base_colors"):
+                current_colors = getattr(entity, "colors", None)
+                entity.base_colors = list(current_colors) if isinstance(current_colors, list) else current_colors
+
+            if isinstance(entity.callback_args, list) and len(entity.callback_args) >= 4:
+                if not hasattr(entity, "base_frame_speed"):
+                    entity.base_frame_speed = entity.callback_args[3]
+
+            if happy:
+                color_index = ((getattr(self, "frame_count", 0) // 2) + int(abs(getattr(entity, "x", 0)) + abs(getattr(entity, "y", 0)))) % len(rainbow_mask_chars)
+                mask_char = rainbow_mask_chars[color_index]
+                entity.default_color = rainbow_default_colors[color_index]
+
+                def mask_for_shape(shape_text: str) -> str:
+                    return chr(10).join(
+                        "".join(mask_char if ch != " " else " " for ch in line)
+                        for line in str(shape_text).split(chr(10))
+                    )
+
+                shapes = getattr(entity, "shapes", None)
+                if isinstance(shapes, list) and shapes:
+                    entity.colors = [mask_for_shape(shape) for shape in shapes]
+                else:
+                    entity.colors = [mask_for_shape(entity.get_current_shape())]
+
+                if isinstance(entity.callback_args, list) and len(entity.callback_args) >= 4:
+                    entity.callback_args[3] = 2.0
+
+                if entity_type == "whale" and getattr(entity, "happy_fish_burst_pending", False):
+                    if hasattr(entity, "current_frame"):
+                        entity.current_frame = max(getattr(entity, "current_frame", 0), 5)
+                    entity.happy_fish_burst_pending = False
+            else:
+                base_colors = getattr(entity, "base_colors", None)
+                if isinstance(base_colors, list):
+                    entity.colors = list(base_colors)
+                elif base_colors is not None:
+                    entity.colors = base_colors
+                entity.default_color = getattr(entity, "base_default_color", entity.default_color)
+                if isinstance(entity.callback_args, list) and len(entity.callback_args) >= 4:
+                    entity.callback_args[3] = getattr(entity, "base_frame_speed", entity.callback_args[3])
+                entity.happy_fish_burst_pending = False
+
 
     def run(self, setup_callback: Callable):
         """Main animation loop"""

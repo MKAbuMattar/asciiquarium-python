@@ -181,6 +181,7 @@ BBBB          BBBBB""",
         whale_anim_mask.append(whale_colors[direction])
 
     anim.new_entity(
+        entity_type="whale",
         color=whale_anim_mask,
         shape=whale_anim,
         auto_trans=True,
@@ -228,6 +229,7 @@ def add_new_monster(old_ent: Optional[Entity], anim: Any):
     monster_anim_mask = [monster_colors[direction], monster_colors[direction]]
 
     anim.new_entity(
+        entity_type="new_monster",
         shape=monster_shapes[direction],
         auto_trans=True,
         color=monster_anim_mask,
@@ -273,6 +275,7 @@ def add_old_monster(old_ent: Optional[Entity], anim: Any):
     ]
 
     anim.new_entity(
+        entity_type="old_monster",
         shape=monster_shapes[direction],
         auto_trans=True,
         color=monster_anim_mask,
@@ -463,6 +466,7 @@ def add_big_fish_2(old_ent: Optional[Entity], anim: Any):
         color_mask = color_mask.replace(str(i), color)
 
     anim.new_entity(
+        entity_type="big_fish_2",
         shape=big_fish_shapes[direction],
         auto_trans=True,
         color=color_mask,

@@ -1,4 +1,5 @@
 import random
+import time
 from typing import Any, Optional, Tuple
 
 from ..animation import DEPTH
@@ -41,8 +42,23 @@ def bubble_collision(bubble: Entity, anim: Any):
 FOOD_DETECTION_RANGE = 30
 FOOD_VERTICAL_SPEED = 0.25
 FOOD_CHASE_BOOST = 0.30
-HAPPY_FISH_SPEED_BOOST = 0.50
-HAPPY_FISH_BUBBLE_THRESHOLD = 92
+HAPPY_FISH_BUBBLE_THRESHOLD = 90
+HAPPY_FISH_V3_SMALL_SPEED_BOOST = 0.55
+HAPPY_FISH_V3_MEDIUM_SPEED_BOOST = 0.38
+HAPPY_FISH_V3_LARGE_SPEED_BOOST = 0.20
+HAPPY_FISH_V3_DANCE_VERTICAL_SPEED = 0.45
+HAPPY_FISH_V3_DANCE_PERIOD = 20
+HAPPY_FISH_V3_BUBBLE_BURST_COUNT = 4
+HAPPY_FISH_V3_SPARKLE_CHANCE_PERCENT = 35
+HAPPY_FISH_V3_SPARKLE_COLORS = ["YELLOW", "MAGENTA", "CYAN", "WHITE"]
+HAPPY_FISH_V4_RAINBOW_COLORS = ["RED", "YELLOW", "GREEN", "CYAN", "BLUE", "MAGENTA", "WHITE"]
+HAPPY_FISH_V4_RAINBOW_FRAME_STEP = 2
+HAPPY_FISH_BUBBLE_BURST_COUNT = 4
+HAPPY_FISH_SMALL_SPEED_BOOST = 0.45
+HAPPY_FISH_MEDIUM_SPEED_BOOST = 0.30
+HAPPY_FISH_LARGE_SPEED_BOOST = 0.15
+HAPPY_FISH_WIGGLE_SPEED = 0.20
+HAPPY_FISH_WIGGLE_PERIOD = 6
 
 
 def find_nearest_food(fish: Entity, anim: Any) -> Optional[Entity]:
@@ -159,25 +175,181 @@ def add_food_bubble(food: Entity, anim: Any):
         coll_handler=bubble_collision,
         default_color="CYAN",
     )
-    
-    
+
+
+def happy_fish_speed_boost(fish: Entity) -> float:
+    """Return a size-based Happy Fish speed boost for ordinary fish."""
+    fish_w, fish_h = fish.size()
+    fish_area = fish_w * fish_h
+
+    if fish_area <= 25:
+        return HAPPY_FISH_SMALL_SPEED_BOOST
+    if fish_area <= 70:
+        return HAPPY_FISH_MEDIUM_SPEED_BOOST
+    return HAPPY_FISH_LARGE_SPEED_BOOST
+
+
+def happy_fish_wiggle_dy(fish: Entity) -> float:
+    """Return a subtle up/down wiggle for Happy Fish mode."""
+    phase = int((time.time() * 8) + abs(fish.x) + abs(fish.y)) % HAPPY_FISH_WIGGLE_PERIOD
+
+    if phase in (0, 1):
+        return -HAPPY_FISH_WIGGLE_SPEED
+    if phase in (3, 4):
+        return HAPPY_FISH_WIGGLE_SPEED
+    return 0.0
+
+
+def add_happy_fish_bubble_burst(fish: Entity, anim: Any) -> None:
+    """Emit a short one-time bubble burst from a Happy Fish."""
+    for _ in range(HAPPY_FISH_BUBBLE_BURST_COUNT):
+        add_bubble(fish, anim)
+
+
+
+def happy_fish_v3_speed_boost(fish: Entity) -> float:
+    # Size-based speed boost for ordinary fish. Sharks do not use this callback.
+    fish_w, fish_h = fish.size()
+    fish_area = fish_w * fish_h
+
+    if fish_area <= 30:
+        return HAPPY_FISH_V3_SMALL_SPEED_BOOST
+    if fish_area <= 70:
+        return HAPPY_FISH_V3_MEDIUM_SPEED_BOOST
+    return HAPPY_FISH_V3_LARGE_SPEED_BOOST
+
+
+def happy_fish_v3_dance_dy(fish: Entity, anim: Any) -> float:
+    # Stronger, visible one-row-ish dance pattern.
+    frame_count = getattr(anim, "frame_count", 0)
+    phase = (frame_count + int(abs(fish.x) + abs(fish.y))) % HAPPY_FISH_V3_DANCE_PERIOD
+
+    if phase < 5:
+        dy = -HAPPY_FISH_V3_DANCE_VERTICAL_SPEED
+    elif phase < 10:
+        dy = 0
+    elif phase < 15:
+        dy = HAPPY_FISH_V3_DANCE_VERTICAL_SPEED
+    else:
+        dy = 0
+
+    # Keep fish away from waterline and bottom decorations.
+    fish_w, fish_h = fish.size()
+    if dy < 0 and fish.y <= 8:
+        return 0
+    if dy > 0 and fish.y + fish_h >= anim.height() - 3:
+        return 0
+    return dy
+
+
+def add_happy_fish_sparkle(fish: Entity, anim: Any) -> None:
+    # Add a short-lived sparkle near the fish.
+    fish_x, fish_y, fish_z = fish.position()
+    fish_w, fish_h = fish.size()
+
+    sparkle_x = fish_x + random.randint(0, max(0, fish_w - 1))
+    sparkle_y = fish_y + random.randint(0, max(0, fish_h - 1))
+    sparkle_z = fish_z - 1
+
+    anim.new_entity(
+        entity_type="happy_sparkle",
+        shape=["*", "+", ".", " "],
+        position=[sparkle_x, sparkle_y, sparkle_z],
+        callback_args=[random.choice([-0.05, 0, 0.05]), -0.15, 0, 0.45],
+        die_offscreen=True,
+        default_color=random.choice(HAPPY_FISH_V3_SPARKLE_COLORS),
+        auto_trans=True,
+        die_frame=4,
+    )
+
+
+def add_happy_fish_bubble_burst(fish: Entity, anim: Any) -> None:
+    for _ in range(HAPPY_FISH_V3_BUBBLE_BURST_COUNT):
+        add_bubble(fish, anim)
+
+
+
+
+
+
+def apply_happy_fish_rainbow_color(entity: Entity, anim: Any) -> None:
+    # Temporarily cycle the whole fish body through bright colors.
+    # Entity.get_current_color() reads entity.colors, not entity.color.
+    if not hasattr(entity, "base_default_color"):
+        entity.base_default_color = getattr(entity, "default_color", None)
+    if not hasattr(entity, "base_colors"):
+        current_colors = getattr(entity, "colors", None)
+        entity.base_colors = list(current_colors) if isinstance(current_colors, list) else current_colors
+
+    frame_count = getattr(anim, "frame_count", 0)
+    phase_offset = int(abs(getattr(entity, "x", 0)) + abs(getattr(entity, "y", 0)))
+    colors = HAPPY_FISH_V4_RAINBOW_COLORS
+    color_index = ((frame_count // HAPPY_FISH_V4_RAINBOW_FRAME_STEP) + phase_offset) % len(colors)
+    mask_chars = ["r", "y", "g", "c", "b", "m", "w"]
+    mask_char = mask_chars[color_index]
+    entity.default_color = colors[color_index]
+
+    def mask_for_shape(shape_text: str) -> str:
+        return chr(10).join(
+            "".join(mask_char if ch != " " else " " for ch in line)
+            for line in str(shape_text).split(chr(10))
+        )
+
+    shapes = getattr(entity, "shapes", None)
+    if isinstance(shapes, list) and shapes:
+        entity.colors = [mask_for_shape(shape) for shape in shapes]
+    else:
+        entity.colors = [mask_for_shape(entity.get_current_shape())]
+
+
+def restore_happy_fish_base_color(entity: Entity) -> None:
+    # Restore original color masks and default color after Happy Fish mode ends.
+    if hasattr(entity, "base_colors"):
+        base_colors = entity.base_colors
+        entity.colors = list(base_colors) if isinstance(base_colors, list) else base_colors
+    if hasattr(entity, "base_default_color"):
+        entity.default_color = entity.base_default_color
+
+
 def fish_callback(fish: Entity, anim: Any) -> bool:
-    """Fish behavior - blow bubbles and react to nearby food."""
+    """Fish behavior - blow bubbles, dance during Happy Fish, and react to food."""
     happy_fish_active = bool(getattr(anim, "happy_fish_active", lambda: False)())
+
+    # Do not apply Happy Fish movement boosts to sharks if a shark ever uses
+    # this callback.
+    if getattr(fish, "entity_type", "fish") == "shark":
+        happy_fish_active = False
+
+    if happy_fish_active and getattr(fish, "happy_fish_burst_pending", False):
+        add_happy_fish_bubble_burst(fish, anim)
+        fish.happy_fish_burst_pending = False
+    elif not happy_fish_active:
+        fish.happy_fish_burst_pending = False
+
     bubble_threshold = HAPPY_FISH_BUBBLE_THRESHOLD if happy_fish_active else 97
     if random.randint(1, 100) > bubble_threshold:
         add_bubble(fish, anim)
 
+    if happy_fish_active and random.randint(1, 100) <= HAPPY_FISH_V3_SPARKLE_CHANCE_PERCENT:
+        add_happy_fish_sparkle(fish, anim)
+
     if not isinstance(fish.callback_args, list):
+        if happy_fish_active:
+            apply_happy_fish_rainbow_color(fish, anim)
+        else:
+            restore_happy_fish_base_color(fish)
         return fish.move_entity(anim)
 
-    # Store the fish's original horizontal speed once, so food-chasing boosts
-    # do not accumulate every frame.
+    # Store the fish\'s original horizontal speed once, so boosts do not
+    # accumulate every frame.
     if not hasattr(fish, "base_dx"):
         fish.base_dx = fish.callback_args[0] if fish.callback_args else 0
 
     base_dx = fish.base_dx
-    nearest_food = find_nearest_food(fish, anim)
+
+    # During Happy Fish mode, ignore food so the dance is visible instead of
+    # being obscured by food-chasing movement.
+    nearest_food = None if happy_fish_active else find_nearest_food(fish, anim)
 
     if nearest_food:
         fish_x, fish_y, _ = fish.position()
@@ -187,7 +359,6 @@ def fish_callback(fish: Entity, anim: Any) -> bool:
 
         food_x, food_y, _ = nearest_food.position()
 
-        # Nudge vertically toward the food.
         if food_y > fish_center_y:
             fish.callback_args[1] = FOOD_VERTICAL_SPEED
         elif food_y < fish_center_y:
@@ -195,7 +366,6 @@ def fish_callback(fish: Entity, anim: Any) -> bool:
         else:
             fish.callback_args[1] = 0
 
-        # Slightly speed up if the food is in front of the fish.
         swimming_right = base_dx > 0
         food_is_ahead = (
             swimming_right and food_x > fish_center_x
@@ -211,22 +381,25 @@ def fish_callback(fish: Entity, anim: Any) -> bool:
         else:
             fish.callback_args[0] = base_dx
     else:
-        # Happy Fish mode: swim a little faster when not chasing food.
         if happy_fish_active:
+            speed_boost = happy_fish_v3_speed_boost(fish)
             if base_dx > 0:
-                fish.callback_args[0] = base_dx + HAPPY_FISH_SPEED_BOOST
+                fish.callback_args[0] = abs(base_dx) + speed_boost
             elif base_dx < 0:
-                fish.callback_args[0] = base_dx - HAPPY_FISH_SPEED_BOOST
+                fish.callback_args[0] = -abs(base_dx) - speed_boost
             else:
                 fish.callback_args[0] = base_dx
-            fish.callback_args[1] = 0
+            fish.callback_args[1] = happy_fish_v3_dance_dy(fish, anim)
         else:
-            # No food nearby; resume normal straight swimming.
             fish.callback_args[0] = base_dx
             fish.callback_args[1] = 0
 
-    return fish.move_entity(anim)
+    if happy_fish_active:
+        apply_happy_fish_rainbow_color(fish, anim)
+    else:
+        restore_happy_fish_base_color(fish)
 
+    return fish.move_entity(anim)
 
 def fish_collision(fish: Entity, anim: Any):
     """Handle fish collision with predators, fishing hook, and food."""

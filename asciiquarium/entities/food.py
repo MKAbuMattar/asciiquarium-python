@@ -9,6 +9,8 @@ from ..entity import Entity
 MAX_FOOD = 5
 
 
+
+
 def add_food(old_food: Optional[Entity], anim: Any) -> Optional[Entity]:
     """Add a single food pellet to the aquarium.
 
@@ -20,7 +22,7 @@ def add_food(old_food: Optional[Entity], anim: Any) -> Optional[Entity]:
         return None
 
     x = random.randint(1, max(1, anim.width() - 2))
-    y = 6  # just below the animated water lines
+    y = 8 # two rows lower  # just below the animated water lines
 
     return anim.new_entity(
         name=f"food_{random.random()}",
