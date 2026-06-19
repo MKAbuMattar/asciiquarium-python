@@ -378,7 +378,7 @@ class Animation:
 
     def start_happy_fish(self) -> None:
         """Start a short Happy Fish celebration mode."""
-        self.happy_fish_until = time.time() + 8.0
+        self.happy_fish_until = time.time() + 10.0
 
         # Queue one-time celebration effects for ordinary fish and whales.
         for entity in self.entities:
