@@ -64,6 +64,7 @@ An aquarium/sea animation in ASCII art for your terminal! This is a Python reimp
 - ⌨️ Interactive controls
 - 🍣 Feeding support: press `F` to drop food into the aquarium.
 - 🐟 Fish can detect nearby food, swim toward it, and eat it.
+- 👍 "Happy Fish" mode: press `H` to excite the fish.
 - 🌍 Cross-platform (Windows, Linux, macOS)
 
 ## 🚀 Installation
@@ -99,6 +100,7 @@ That's it! Enjoy your ASCII aquarium! 🐠
 - **`R`** or **`r`** - Redraw and respawn all entities
 - **`I`** or **`i`** - Show/hide info overlay
 - **`F`** or **`f`** - Feed the fish
+- **`H`** or **`h`** - "Happy Fish" mode for 10 seconds
 
 ## � Requirements
 
@@ -126,6 +128,7 @@ New keyboard control:
 
 ```text
 F or f    Drop food into the aquarium
+H or h    "Happy Fish" mode: 10 seconds of increased activity and color changing
 ```
 
 When used with the OpenGhost Raspberry Pi controller, the aquarium can also be controlled by hand gestures. Hand gesture support requires the modified OpenGhost controller code from the `pinch-release-keypress` branch of this repository:
@@ -136,6 +139,7 @@ https://github.com/klwill1192/OpenGhost/tree/pinch-release-keypress
 	
 ```text
 Pinch thumb and index finger, then release     Drop food into the aquarium
+Hold a "thumbs up" gesture                     Start "Happy Fish" mode for 10 seconds
 Hold a two-finger "peace sign" gesture         Quit the aquarium ("Peace out!")
 Hold a closed fist gesture                     Shut down the Raspberry Pi
 ```
@@ -147,6 +151,7 @@ Black flag     No hand detected by the camera
 Green flag     Hand detected / normal operation
 Yellow flag    Shutdown gesture has been held for 2 seconds
 Red flag       Shutdown gesture has been held for 4 seconds; shutdown is imminent
+Magenta flag   Currently in "Happy Fish" mode: increased activity and color changing
 ```
 
 After the peace sign gesture is held for 5 seconds, OpenGhost sends `q` to the asciiquarium xterm window and exits cleanly. Peace out!
