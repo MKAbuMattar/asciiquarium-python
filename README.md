@@ -147,7 +147,7 @@ Hold a closed fist gesture                     Shut down the Raspberry Pi
 The OpenGhost controller displays a small status flag over the castle:
 
 ```text
-Black flag     No hand detected by the camera
+White flag     No hand detected by the camera
 Green flag     Hand detected / normal operation
 Yellow flag    Shutdown gesture has been held for 2 seconds
 Red flag       Shutdown gesture has been held for 4 seconds; shutdown is imminent
