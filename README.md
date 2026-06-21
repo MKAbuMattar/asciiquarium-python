@@ -146,6 +146,14 @@ Hold a closed fist gesture                     Shut down the Raspberry Pi
 
 The OpenGhost controller displays a small status flag over the castle:
 
+| Flag | Meaning |
+|---|---|
+| ![White/gray outline flag](images/status_flag_no_hand.png) | No hand detected by the camera |
+| ![Green flag](images/status_flag_green.png) | Hand detected / normal operation |
+| ![Magenta flag](images/status_flag_magenta.png) | Happy Fish mode was triggered and is active/recent |
+| ![Yellow flag](images/status_flag_yellow.png) | Shutdown gesture has been held for 2 seconds |
+| ![Red flag](images/status_flag_red.png) | Shutdown gesture has been held for 4 seconds; shutdown is imminent |
+
 ```text
 White flag     No hand detected by the camera
 Green flag     Hand detected / normal operation
