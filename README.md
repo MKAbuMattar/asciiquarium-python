@@ -148,19 +148,11 @@ The OpenGhost controller displays a small status flag over the castle:
 
 | Flag | Meaning |
 |---|---|
-| ![White/gray outline flag](images/status_flag_no_hand.png) | No hand detected by the camera |
-| ![Green flag](images/status_flag_green.png) | Hand detected / normal operation |
-| ![Magenta flag](images/status_flag_magenta.png) | Happy Fish mode was triggered and is active/recent |
-| ![Yellow flag](images/status_flag_yellow.png) | Shutdown gesture has been held for 2 seconds |
-| ![Red flag](images/status_flag_red.png) | Shutdown gesture has been held for 4 seconds; shutdown is imminent |
-
-```text
-White flag     No hand detected by the camera
-Green flag     Hand detected / normal operation
-Yellow flag    Shutdown gesture has been held for 2 seconds
-Red flag       Shutdown gesture has been held for 4 seconds; shutdown is imminent
-Magenta flag   Currently in "Happy Fish" mode: increased activity and color changing
-```
+| <img src="images/status_flag_no_hand.png" alt="White/gray outline flag" width="24"> | No hand detected by the camera |
+| <img src="images/status_flag_green.png" alt="Green flag" width="24"> | Hand detected / normal operation |
+| <img src="images/status_flag_magenta.png" alt="Magenta flag" width="24"> | Happy Fish mode was triggered and is active/recent |
+| <img src="images/status_flag_yellow.png" alt="Yellow flag" width="24"> | Shutdown gesture has been held for 2 seconds |
+| <img src="images/status_flag_red.png" alt="Red flag" width="24"> | Shutdown gesture has been held for 4 seconds; shutdown is imminent |
 
 After the peace sign gesture is held for 5 seconds, OpenGhost sends `q` to the asciiquarium xterm window and exits cleanly. Peace out!
 
