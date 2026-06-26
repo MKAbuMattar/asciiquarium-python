@@ -393,7 +393,7 @@ class Animation:
 
         # Queue one-time celebration effects for ordinary fish and whales.
         for entity in self.entities:
-            if entity.entity_type in ("fish", "whale", "dolphin", "old_monster", "new_monster", "big_fish", "big_fish_2"):
+            if entity.entity_type in ("fish", "whale", "dolphin", "old_monster", "new_monster", "big_fish", "big_fish_2", "shark"):
                 setattr(entity, "happy_fish_burst_pending", True)
 
     def happy_fish_active(self) -> bool:
@@ -433,10 +433,11 @@ class Animation:
         rainbow_mask_chars = ["r", "y", "g", "c", "b", "m", "w"]
         rainbow_default_colors = ["RED", "YELLOW", "GREEN", "CYAN", "BLUE", "MAGENTA", "WHITE"]
         happy_special_types = ("whale", "dolphin", "old_monster", "new_monster", "big_fish", "big_fish_2")
+        easter_egg_special_types = happy_special_types + ("shark",)
 
         for entity in self.entities:
             entity_type = getattr(entity, "entity_type", "")
-            if entity_type not in happy_special_types:
+            if entity_type not in easter_egg_special_types:
                 continue
 
             if not hasattr(entity, "base_default_color"):
@@ -449,7 +450,9 @@ class Animation:
                 if not hasattr(entity, "base_frame_speed"):
                     entity.base_frame_speed = entity.callback_args[3]
 
-            if effect_active:
+            entity_effect_active = easter_egg or (happy and entity_type in happy_special_types)
+
+            if entity_effect_active:
                 if easter_egg:
                     mask_char, default_color = self.easter_egg_color_pair()
                     entity.default_color = default_color

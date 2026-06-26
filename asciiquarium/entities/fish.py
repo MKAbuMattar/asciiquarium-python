@@ -347,12 +347,10 @@ def fish_callback(fish: Entity, anim: Any) -> bool:
     easter_egg_active = bool(getattr(anim, "easter_egg_active", lambda: False)())
     visual_effect_active = happy_fish_active or easter_egg_active
 
-    # Do not apply celebration movement boosts to sharks if a shark ever uses
-    # this callback.
+    # Sharks stay excluded from Happy Fish, but participate in Easter Egg mode.
     if getattr(fish, "entity_type", "fish") == "shark":
         happy_fish_active = False
-        easter_egg_active = False
-        visual_effect_active = False
+        visual_effect_active = easter_egg_active
 
     if visual_effect_active and getattr(fish, "happy_fish_burst_pending", False):
         add_happy_fish_bubble_burst(fish, anim)
