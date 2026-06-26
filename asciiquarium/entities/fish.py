@@ -302,6 +302,36 @@ def apply_happy_fish_rainbow_color(entity: Entity, anim: Any) -> None:
         entity.colors = [mask_for_shape(entity.get_current_shape())]
 
 
+def apply_easter_egg_color(entity: Entity, anim: Any) -> None:
+    # Temporarily apply Easter Egg color pattern to the whole fish body.
+    # Entity.get_current_color() reads entity.colors, not entity.color.
+    if not hasattr(entity, "base_default_color"):
+        entity.base_default_color = getattr(entity, "default_color", None)
+    if not hasattr(entity, "base_colors"):
+        current_colors = getattr(entity, "colors", None)
+        entity.base_colors = list(current_colors) if isinstance(current_colors, list) else current_colors
+
+    color_pair_fn = getattr(anim, "easter_egg_color_pair", None)
+    if callable(color_pair_fn):
+        mask_char, default_color = color_pair_fn()
+    else:
+        mask_char, default_color = "r", "RED"
+
+    entity.default_color = default_color
+
+    def mask_for_shape(shape_text: str) -> str:
+        return chr(10).join(
+            "".join(mask_char if ch != " " else " " for ch in line)
+            for line in str(shape_text).split(chr(10))
+        )
+
+    shapes = getattr(entity, "shapes", None)
+    if isinstance(shapes, list) and shapes:
+        entity.colors = [mask_for_shape(shape) for shape in shapes]
+    else:
+        entity.colors = [mask_for_shape(entity.get_current_shape())]
+
+
 def restore_happy_fish_base_color(entity: Entity) -> None:
     # Restore original color masks and default color after Happy Fish mode ends.
     if hasattr(entity, "base_colors"):
@@ -312,44 +342,50 @@ def restore_happy_fish_base_color(entity: Entity) -> None:
 
 
 def fish_callback(fish: Entity, anim: Any) -> bool:
-    """Fish behavior - blow bubbles, dance during Happy Fish, and react to food."""
+    """Fish behavior - blow bubbles, dance during Happy Fish/Easter Egg, and react to food."""
     happy_fish_active = bool(getattr(anim, "happy_fish_active", lambda: False)())
+    easter_egg_active = bool(getattr(anim, "easter_egg_active", lambda: False)())
+    visual_effect_active = happy_fish_active or easter_egg_active
 
-    # Do not apply Happy Fish movement boosts to sharks if a shark ever uses
+    # Do not apply celebration movement boosts to sharks if a shark ever uses
     # this callback.
     if getattr(fish, "entity_type", "fish") == "shark":
         happy_fish_active = False
+        easter_egg_active = False
+        visual_effect_active = False
 
-    if happy_fish_active and getattr(fish, "happy_fish_burst_pending", False):
+    if visual_effect_active and getattr(fish, "happy_fish_burst_pending", False):
         add_happy_fish_bubble_burst(fish, anim)
         fish.happy_fish_burst_pending = False
-    elif not happy_fish_active:
+    elif not visual_effect_active:
         fish.happy_fish_burst_pending = False
 
-    bubble_threshold = HAPPY_FISH_BUBBLE_THRESHOLD if happy_fish_active else 97
+    bubble_threshold = HAPPY_FISH_BUBBLE_THRESHOLD if visual_effect_active else 97
     if random.randint(1, 100) > bubble_threshold:
         add_bubble(fish, anim)
 
-    if happy_fish_active and random.randint(1, 100) <= HAPPY_FISH_V3_SPARKLE_CHANCE_PERCENT:
+    if visual_effect_active and random.randint(1, 100) <= HAPPY_FISH_V3_SPARKLE_CHANCE_PERCENT:
         add_happy_fish_sparkle(fish, anim)
 
     if not isinstance(fish.callback_args, list):
-        if happy_fish_active:
+        if easter_egg_active:
+            apply_easter_egg_color(fish, anim)
+        elif happy_fish_active:
             apply_happy_fish_rainbow_color(fish, anim)
         else:
             restore_happy_fish_base_color(fish)
         return fish.move_entity(anim)
 
-    # Store the fish\'s original horizontal speed once, so boosts do not
+    # Store the fish's original horizontal speed once, so boosts do not
     # accumulate every frame.
     if not hasattr(fish, "base_dx"):
         fish.base_dx = fish.callback_args[0] if fish.callback_args else 0
 
     base_dx = fish.base_dx
 
-    # During Happy Fish mode, ignore food so the dance is visible instead of
+    # During visual effect modes, ignore food so the dance is visible instead of
     # being obscured by food-chasing movement.
-    nearest_food = None if happy_fish_active else find_nearest_food(fish, anim)
+    nearest_food = None if visual_effect_active else find_nearest_food(fish, anim)
 
     if nearest_food:
         fish_x, fish_y, _ = fish.position()
@@ -381,7 +417,7 @@ def fish_callback(fish: Entity, anim: Any) -> bool:
         else:
             fish.callback_args[0] = base_dx
     else:
-        if happy_fish_active:
+        if visual_effect_active:
             speed_boost = happy_fish_v3_speed_boost(fish)
             if base_dx > 0:
                 fish.callback_args[0] = abs(base_dx) + speed_boost
@@ -394,7 +430,9 @@ def fish_callback(fish: Entity, anim: Any) -> bool:
             fish.callback_args[0] = base_dx
             fish.callback_args[1] = 0
 
-    if happy_fish_active:
+    if easter_egg_active:
+        apply_easter_egg_color(fish, anim)
+    elif happy_fish_active:
         apply_happy_fish_rainbow_color(fish, anim)
     else:
         restore_happy_fish_base_color(fish)

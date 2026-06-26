@@ -47,6 +47,16 @@ DEPTH = {
     "water_gap0": 9,
 }
 
+EASTER_EGG_DURATION_SECONDS = 10.0
+EASTER_EGG_PATTERN_NAME = "red_red_red_white"
+EASTER_EGG_FRAME_STEP = 2
+EASTER_EGG_PATTERNS = {
+    "red_white_red_white": [("r", "RED"), ("w", "WHITE"), ("r", "RED"), ("w", "WHITE")],
+    "red_black_red_black": [("r", "RED"), ("k", "BLACK"), ("r", "RED"), ("k", "BLACK")],
+    "red_white_red_black": [("r", "RED"), ("w", "WHITE"), ("r", "RED"), ("k", "BLACK")],
+    "red_red_red_white":   [("r", "RED"), ("r", "RED"), ("r", "RED"), ("w", "WHITE")]
+}
+
 
 class Animation:
     """Main animation controller that manages the screen and all entities"""
@@ -57,6 +67,7 @@ class Animation:
         self.color_enabled = True
         self.running = False
         self.happy_fish_until: float = 0.0
+        self.easter_egg_until: float = 0.0
         self.frame_count: int = 0
         self.screen_width: int = 0
         self.screen_height: int = 0
@@ -389,10 +400,36 @@ class Animation:
         """Return True while Happy Fish mode is active."""
         return time.time() < self.happy_fish_until
 
+    def start_easter_egg(self) -> None:
+        """Start a short Easter Egg mode."""
+        self.easter_egg_until = time.time() + EASTER_EGG_DURATION_SECONDS
+
+        # Queue one-time celebration effects for ordinary fish and whales.
+        for entity in self.entities:
+            if entity.entity_type in ("fish", "whale", "dolphin", "old_monster", "new_monster", "big_fish", "big_fish_2"):
+                setattr(entity, "happy_fish_burst_pending", True)
+
+    def easter_egg_active(self) -> bool:
+        """Return True while Easter Egg mode is active."""
+        return time.time() < self.easter_egg_until
+
+    def easter_egg_color_pair(self) -> tuple[str, str]:
+        """Return the current Easter Egg mask character and default color."""
+        pattern = EASTER_EGG_PATTERNS.get(
+            EASTER_EGG_PATTERN_NAME,
+            EASTER_EGG_PATTERNS["red_black_red_black"],
+        )
+        frame_count = getattr(self, "frame_count", 0)
+        color_index = (frame_count // EASTER_EGG_FRAME_STEP) % len(pattern)
+        return pattern[color_index]
+
     def update_happy_fish_entity_effects(self) -> None:
-        # Keep Happy Fish effects for special animated entities here.
-        # Ordinary fish rainbow/dance is handled in fish_callback().
+        # Keep Happy Fish and Easter Egg effects for special animated entities here.
+        # Ordinary fish color/dance effects are handled in fish_callback().
         happy = self.happy_fish_active()
+        easter_egg = self.easter_egg_active()
+        effect_active = happy or easter_egg
+
         rainbow_mask_chars = ["r", "y", "g", "c", "b", "m", "w"]
         rainbow_default_colors = ["RED", "YELLOW", "GREEN", "CYAN", "BLUE", "MAGENTA", "WHITE"]
         happy_special_types = ("whale", "dolphin", "old_monster", "new_monster", "big_fish", "big_fish_2")
@@ -412,10 +449,14 @@ class Animation:
                 if not hasattr(entity, "base_frame_speed"):
                     entity.base_frame_speed = entity.callback_args[3]
 
-            if happy:
-                color_index = ((getattr(self, "frame_count", 0) // 2) + int(abs(getattr(entity, "x", 0)) + abs(getattr(entity, "y", 0)))) % len(rainbow_mask_chars)
-                mask_char = rainbow_mask_chars[color_index]
-                entity.default_color = rainbow_default_colors[color_index]
+            if effect_active:
+                if easter_egg:
+                    mask_char, default_color = self.easter_egg_color_pair()
+                    entity.default_color = default_color
+                else:
+                    color_index = ((getattr(self, "frame_count", 0) // 2) + int(abs(getattr(entity, "x", 0)) + abs(getattr(entity, "y", 0)))) % len(rainbow_mask_chars)
+                    mask_char = rainbow_mask_chars[color_index]
+                    entity.default_color = rainbow_default_colors[color_index]
 
                 def mask_for_shape(shape_text: str) -> str:
                     return chr(10).join(
@@ -489,6 +530,8 @@ class Animation:
                                 add_food(None, self)
                             elif key_char == "h":
                                 self.start_happy_fish()
+                            elif key_char == "e":
+                                self.start_easter_egg()
                             elif key == 27:
                                 if showing_info:
                                     showing_info = False

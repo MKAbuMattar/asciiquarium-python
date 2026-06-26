@@ -6,7 +6,7 @@ from typing import Any, Optional
 from ..animation import DEPTH
 from ..entity import Entity
 
-MAX_FOOD = 5
+MAX_FOOD = 10
 
 
 
