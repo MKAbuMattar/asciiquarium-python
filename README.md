@@ -60,6 +60,7 @@ An aquarium/sea animation in ASCII art for your terminal! This is a Python reimp
 - 🌊 Animated blue water lines and seaweed
 - 🏰 Castle decoration
 - � Blue bubbles rising from fish
+- 🍤 Feed the fish with `F` and watch them chase the flakes down
 - 🎨 Full color support
 - ⌨️ Interactive controls
 - 🌍 Cross-platform (Windows, Linux, macOS)
@@ -95,6 +96,7 @@ That's it! Enjoy your ASCII aquarium! 🐠
 - **`Q`** or **`q`** - Quit the aquarium
 - **`P`** or **`p`** - Pause/unpause the animation
 - **`R`** or **`r`** - Redraw and respawn all entities
+- **`F`** or **`f`** - Drop a flake of food (up to 10 at a time)
 - **`I`** or **`i`** - Show/hide info overlay
 
 ## � Requirements

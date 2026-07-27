@@ -1,7 +1,7 @@
 import random
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
-from ..animation import DEPTH
+from ..animation import DEPTH, WATER_LINE_BOTTOM
 from ..entity import Entity
 
 
@@ -38,19 +38,149 @@ def bubble_collision(bubble: Entity, anim: Any):
             break
 
 
+FOOD_RANGE = 30
+FOOD_BEHIND_PENALTY = 15
+FOOD_CHASE_DX = 0.30
+FOOD_CHASE_DY = 0.25
+MOUTH_X_TOLERANCE = 2
+MOUTH_Y_TOLERANCE = 1
+
+
+def fish_speed(fish: Entity) -> float:
+    """Horizontal speed, and therefore facing.
+
+    Returns 0.0 for a fish whose callback_args is a dict — a hooked fish is
+    being reeled in and is not swimming under its own power.
+    """
+    args = fish.callback_args
+    return args[0] if isinstance(args, list) and args else 0.0
+
+
+def nearest_food(fish: Entity, anim: Any) -> Optional[Entity]:
+    """Closest flake worth chasing, or None.
+
+    Food already ahead of the fish wins ties against food behind it, so a fish
+    between two flakes keeps swimming instead of stalling on the spot.
+    """
+    fish_x, fish_y, _ = fish.position()
+    fish_w, fish_h = fish.size()
+    center_x = fish_x + fish_w // 2
+    center_y = fish_y + fish_h // 2
+    swimming_right = fish_speed(fish) > 0
+
+    best: Optional[Entity] = None
+    best_score = float(FOOD_RANGE)
+
+    for food in anim.get_entities_of_type("food"):
+        food_x, food_y, _ = food.position()
+        distance = abs(food_x - center_x) + abs(food_y - center_y)
+
+        if distance > FOOD_RANGE:
+            continue
+
+        ahead = (food_x >= center_x) == swimming_right
+        score = distance if ahead else distance + FOOD_BEHIND_PENALTY
+
+        if score < best_score:
+            best, best_score = food, score
+
+    return best
+
+
+def chase_food(fish: Entity, food: Entity, anim: Any) -> None:
+    """Nudge a fish toward a flake for this frame only.
+
+    Adjusts x/y directly rather than callback_args, so the fish's own speed and
+    direction stay pristine: nothing accumulates across frames, and every other
+    caller can still read direction off callback_args[0].
+    """
+    fish_x, fish_y, _ = fish.position()
+    fish_w, fish_h = fish.size()
+    food_x, food_y, _ = food.position()
+    center_y = fish_y + fish_h // 2
+
+    # Clamped at both ends: a fish following a flake to the floor would sink
+    # past die_offscreen and be culled, which reads as fish vanishing when fed.
+    if food_y > center_y and fish_y + fish_h < anim.height() - 1:
+        fish.y += FOOD_CHASE_DY
+    elif food_y < center_y and fish_y > WATER_LINE_BOTTOM:
+        fish.y -= FOOD_CHASE_DY
+
+    speed = fish_speed(fish)
+    if (food_x > fish_x + fish_w // 2) == (speed > 0):
+        fish.x += FOOD_CHASE_DX if speed > 0 else -FOOD_CHASE_DX
+
+
+def mouth_position(fish: Entity) -> Tuple[int, int]:
+    """Leading edge of the fish, vertically centered."""
+    fish_x, fish_y, _ = fish.position()
+    fish_w, fish_h = fish.size()
+    swimming_right = fish_speed(fish) > 0
+
+    return (fish_x + fish_w - 1 if swimming_right else fish_x, fish_y + fish_h // 2)
+
+
+def food_at_mouth(fish: Entity, food: Entity) -> bool:
+    """True when food has reached the fish's mouth, not merely its bounding box.
+
+    Needs a tolerance because ASCII fish are ragged and fractional movement is
+    rounded to whole cells before it is drawn.
+    """
+    food_x, food_y, _ = food.position()
+    mouth_x, mouth_y = mouth_position(fish)
+
+    return (
+        abs(food_x - mouth_x) <= MOUTH_X_TOLERANCE
+        and abs(food_y - mouth_y) <= MOUTH_Y_TOLERANCE
+    )
+
+
+def add_munch(fish: Entity, anim: Any):
+    """Brief flourish at the mouth when a flake is swallowed.
+
+    Drifts at the fish's own speed instead of holding a reference to it, so it
+    keeps pace without outliving the fish it belongs to.
+    """
+    mouth_x, mouth_y = mouth_position(fish)
+    _, _, fish_z = fish.position()
+
+    anim.new_entity(
+        shape=["*", "+", "."],
+        position=[mouth_x, mouth_y, fish_z - 1],
+        callback_args=[fish_speed(fish), 0, 0, 0.35],
+        default_color="YELLOW",
+        auto_trans=True,
+        die_frame=3,
+    )
+
+
 def fish_callback(fish: Entity, anim: Any) -> bool:
-    """Fish behavior - occasionally blow bubbles (matches original probability)"""
+    """Fish behavior - blow bubbles, and chase food when any is within range"""
     if random.randint(1, 100) > 97:
         add_bubble(fish, anim)
+
+    if isinstance(fish.callback_args, list) and fish.callback_args:
+        food = nearest_food(fish, anim)
+        if food:
+            chase_food(fish, food, anim)
+
     return fish.move_entity(anim)
 
 
 def fish_collision(fish: Entity, anim: Any):
-    """Handle fish collision with predators and fishing hook"""
+    """Handle fish collision with food, predators, and the fishing hook"""
     from .special import retract
 
     for col_obj in fish.collisions():
-        if col_obj.entity_type == "teeth" and fish.height <= 5:
+        if col_obj.entity_type == "food":
+            # Overlapping the flake is not enough — it has to reach the mouth,
+            # otherwise a fish swallows food through the middle of its body.
+            if food_at_mouth(fish, col_obj):
+                add_munch(fish, anim)
+                add_bubble(fish, anim)
+                col_obj.kill()
+                break
+        elif col_obj.entity_type == "teeth" and fish.height <= 5:
             add_splat(anim, *col_obj.position())
             fish.kill()
             break
