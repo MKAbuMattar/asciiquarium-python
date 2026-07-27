@@ -54,13 +54,22 @@ jobs:
         with:
           enable-cache: true
 
+      # Heredoc rather than `python -c` folded into YAML. A `>` scalar turns
+      # the newline after the opening quote into a leading space, and Python
+      # rejects that as an unexpected indent before running anything.
       - name: Import every module
-        run: >
-          uv run --python ${{ matrix.python-version }} --no-project
-          python -c "
-          import importlib, pkgutil, asciiquarium;
-          [importlib.import_module(m.name)
-           for m in pkgutil.walk_packages(asciiquarium.__path__, 'asciiquarium.')]"
+        run: |
+          uv run --python ${{ matrix.python-version }} --no-project python - <<'PY'
+          import importlib
+          import pkgutil
+
+          import asciiquarium
+
+          for module in pkgutil.walk_packages(asciiquarium.__path__, "asciiquarium."):
+              importlib.import_module(module.name)
+              print("  " + module.name)
+          print("every module imports")
+          PY
 
       # Goes through the real console_scripts entry point, so this also proves
       # the package builds and installs on this version.
