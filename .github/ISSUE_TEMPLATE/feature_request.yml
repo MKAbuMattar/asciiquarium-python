@@ -1,0 +1,77 @@
+name: Feature request
+description: Propose a new creature, keybinding, or behaviour.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Worth knowing before you write this up: this is a **port of the Perl
+        asciiquarium**, and staying recognisably like the original is a goal in itself. A
+        proposal that changes the feel of the aquarium isn't rejected out of hand, but it
+        does need to argue for itself.
+
+        `ROADMAP.md` lists what's already queued, and what has been **rejected on purpose**
+        — worth a look first.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change is this?
+      options:
+        - A new creature or scenery element
+        - A new keybinding or interaction
+        - A change to existing behaviour
+        - A command-line option
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What should it do
+      description: Describe it from the perspective of someone watching the aquarium.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: |
+        What's missing today. "The original Perl version has it" is a strong reason on its
+        own — say so if that's the case, and link to it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: art
+    attributes:
+      label: ASCII art (if you have it)
+      description: |
+        Paste the shape and its colour mask in a code block. They must have the same number
+        of lines and line up column by column — `.github/CONTRIBUTING.md` explains the
+        pairing. Rough art is fine; alignment is what matters.
+      render: text
+
+  - type: dropdown
+    id: implement
+    attributes:
+      label: Would you like to implement it?
+      options:
+        - "Yes"
+        - "Yes, with some guidance"
+        - "No, just proposing"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This is one self-contained change, not a bundle of several.
+          required: true
+        - label: It needs no new runtime dependency.
+        - label: If it flashes or cycles colour, I've read the accessibility note in the contributing guide.

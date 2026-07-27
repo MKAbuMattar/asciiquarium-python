@@ -1,0 +1,105 @@
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: lint and type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Both currently pass on main with zero findings, so any error here was
+      # introduced by the change under review.
+      - name: Ruff
+        run: uvx ruff check asciiquarium
+
+      - name: Mypy
+        run: uvx mypy --ignore-missing-imports asciiquarium
+
+  import:
+    name: imports on ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Must match `requires-python` and the classifiers in pyproject.toml.
+        # The animation needs a TTY, but importing it does not — and a syntax
+        # or typing construct too new for the floor fails right here.
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # Heredoc rather than `python -c` folded into YAML. A `>` scalar turns
+      # the newline after the opening quote into a leading space, and Python
+      # rejects that as an unexpected indent before running anything.
+      - name: Import every module
+        run: |
+          uv run --python ${{ matrix.python-version }} --no-project python - <<'PY'
+          import importlib
+          import pkgutil
+
+          import asciiquarium
+
+          for module in pkgutil.walk_packages(asciiquarium.__path__, "asciiquarium."):
+              importlib.import_module(module.name)
+              print("  " + module.name)
+          print("every module imports")
+          PY
+
+      # Goes through the real console_scripts entry point, so this also proves
+      # the package builds and installs on this version.
+      - name: CLI responds without a TTY
+        run: |
+          uvx --python ${{ matrix.python-version }} --from . asciiquarium --version
+          uvx --python ${{ matrix.python-version }} --from . asciiquarium --info > /dev/null
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Build sdist and wheel
+        run: uvx --from build pyproject-build
+
+      - name: Check metadata
+        run: uvx twine check dist/*
+
+      # __version__.py is the source of truth; pyproject.toml mirrors it.
+      # They drift silently and only show up as a mislabelled PyPI release.
+      - name: Versions agree
+        run: |
+          uvx --from tomli python - <<'PY'
+          import re, pathlib, tomli
+          pkg = re.search(
+              r'__version__ = "([^"]+)"',
+              pathlib.Path("asciiquarium/__version__.py").read_text(),
+          ).group(1)
+          proj = tomli.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"]
+          assert pkg == proj, f"__version__.py says {pkg}, pyproject.toml says {proj}"
+          print(f"both say {pkg}")
+          PY
