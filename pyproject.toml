@@ -78,6 +78,13 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # Allow unused imports in __init__.py
 
+# Pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The package is importable from the repo root without an editable install,
+# which keeps `pytest` working with no setup step.
+pythonpath = ["."]
+
 # MyPy configuration
 [tool.mypy]
 python_version = "3.8"

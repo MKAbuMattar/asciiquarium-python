@@ -10,6 +10,23 @@ The version lives in `asciiquarium/__version__.py` and is mirrored in `pyproject
 
 ### Added
 
+- **Feeding.** Press `F` to drop a flake of food below the waterline. It sinks with a slight
+  sideways drift; fish within range break off and chase it, preferring flakes already ahead
+  of them so a fish between two does not stall on the spot. A flake is only eaten when it
+  reaches the fish's mouth rather than anywhere its bounding box overlaps. Ten flakes at
+  once is the cap, so holding the key down cannot fill the tank.
+
+  Based on [#7](https://github.com/MKAbuMattar/asciiquarium-python/pull/7) by
+  [@klwill1192](https://github.com/klwill1192). Reworked before landing: pursuit is clamped
+  at the waterline and the floor (an unclamped fish followed food off the bottom of the
+  screen and was culled, so feeding made fish disappear), steering adjusts position for the
+  frame instead of mutating the fish's stored velocity (which accumulated), and the mouth
+  animation drifts at the fish's own speed rather than holding a reference to it. The
+  Happy Fish and easter-egg modes from that PR are not included — see `ROADMAP.md`.
+
+- `tests/` — the first tests in this repository, covering the feeding geometry. They need no
+  terminal, because the parts that break are not the parts that need one.
+
 - Community health files: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, a pull
   request template, and issue forms for bug reports, rendering problems, and feature
   requests. The rendering-problem form exists because "it looks wrong" depends entirely on
