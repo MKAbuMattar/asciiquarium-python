@@ -82,8 +82,10 @@ Same pattern for fish (`death_cb=add_fish`) and seaweed (`death_cb=add_seaweed`)
 | `python3 scripts/release_version.py status` | This checkout's version vs what PyPI is serving. |
 | `grep -rnE '(#\|//) ?ponytail:' .` | Deferred-shortcut ledger. |
 
-There is no test suite yet. **Verifying a change means running it in a terminal and
-watching it**, which is why the PR template asks which terminal you watched it in.
+The tests cover what does not need a terminal: feeding geometry, the art invariants, entity
+sizing, and the version arithmetic. They cannot tell you whether the aquarium *looks* right.
+**Verifying a rendering change still means running it in a terminal and watching it**, which
+is why the PR template asks which terminal you watched it in.
 
 ## Testing a rendering change
 
@@ -140,8 +142,9 @@ version would be accepted before you push anything.
 
 ## Hard rules
 
-- **`uvx ruff check asciiquarium tests` and `uvx mypy --ignore-missing-imports asciiquarium`
-  must pass** before commit. Both are clean on `main`, so anything they report is yours.
+- **`uvx ruff check asciiquarium tests`, `uvx mypy --ignore-missing-imports asciiquarium` and
+  `uvx pytest -q` must pass** before commit. All three are clean on `main`, so anything they
+  report is yours.
 - **Never edit the version by hand.** `asciiquarium/__version__.py` is the source of truth
   and `pyproject.toml` mirrors it, but the release pipeline is what writes both.
 - **Add a `CHANGELOG.md` entry** for anything a user would notice.

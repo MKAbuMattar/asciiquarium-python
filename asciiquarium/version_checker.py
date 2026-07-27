@@ -27,6 +27,35 @@ def is_newer_version(current: str, latest: str) -> bool:
     return parse_version(latest) > parse_version(current)
 
 
+NOTICE = """
+╔═════════════════════════════════════════════════════════════════════╗
+║                                                                     ║
+║    o      ><>         NEW VERSION AVAILABLE!         <><      o     ║
+║                                                                     ║
+║          <°))))><         v{latest:<10}          ><(((°>              ║
+║                                                                     ║
+║       Current: v{current:<10}      →      Latest: v{latest:<10}          ║
+║                                                                     ║
+║    °  Upgrade with:                                                 ║
+║                                                                     ║
+║         pipx upgrade asciiquarium                                   ║
+║                            or                                       ║
+║         pip install --upgrade asciiquarium                          ║
+║                                                                     ║
+║            ><>      <><      ><>      <><      ><>                  ║
+╚═════════════════════════════════════════════════════════════════════╝
+"""
+
+
+def print_update_notice(latest: str) -> None:
+    """Print the upgrade box.
+
+    Never call this while the animation is running — the terminal belongs to
+    curses then, and it cannot repaint over anything else that writes there.
+    """
+    print(NOTICE.format(latest=latest, current=__version__))
+
+
 def check_for_updates(silent: bool = False) -> Optional[str]:
     latest_version = get_latest_version()
 
@@ -35,55 +64,7 @@ def check_for_updates(silent: bool = False) -> Optional[str]:
 
     if is_newer_version(__version__, latest_version):
         if not silent:
-            print("\n")
-            print(
-                "╔═════════════════════════════════════════════════════════════════════╗"
-            )
-            print(
-                "║                                                                     ║"
-            )
-            print(
-                "║    o      ><>         NEW VERSION AVAILABLE!         <><      o     ║"
-            )
-            print(
-                "║                                                                     ║"
-            )
-            print(
-                f"║          <°))))><         v{latest_version:<10}          ><(((°>              ║"
-            )
-            print(
-                "║                                                                     ║"
-            )
-            print(
-                f"║       Current: v{__version__:<10}      →      Latest: v{latest_version:<10}          ║"
-            )
-            print(
-                "║                                                                     ║"
-            )
-            print(
-                "║    °  Upgrade with:                                                 ║"
-            )
-            print(
-                "║                                                                     ║"
-            )
-            print(
-                "║         pipx upgrade asciiquarium                                   ║"
-            )
-            print(
-                "║                            or                                       ║"
-            )
-            print(
-                "║         pip install --upgrade asciiquarium                          ║"
-            )
-            print(
-                "║                                                                     ║"
-            )
-            print(
-                "║            ><>      <><      ><>      <><      ><>                  ║"
-            )
-            print(
-                "╚═════════════════════════════════════════════════════════════════════╝\n"
-            )
+            print_update_notice(latest_version)
         return latest_version
 
     return None

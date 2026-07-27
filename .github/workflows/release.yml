@@ -218,5 +218,10 @@ jobs:
             ```
 
             [PyPI](https://pypi.org/project/asciiquarium/${{ steps.version.outputs.version }}/)
-          files: dist/*
+          # Explicit, not `dist/*`: a build can leave a dotfile in dist/ (uv writes
+          # a `.gitignore` containing `*`), and the glob attaches it to the release
+          # as `default.gitignore` because asset names cannot start with a dot.
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
           make_latest: true

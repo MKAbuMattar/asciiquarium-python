@@ -3,9 +3,8 @@ contact_links:
   - name: Security vulnerability
     url: https://github.com/MKAbuMattar/asciiquarium-python/security/advisories/new
     about: Report security issues privately — do not open a public issue.
-  - name: Question / usage help
-    url: https://github.com/MKAbuMattar/asciiquarium-python/discussions
-    about: Ask how to install or run the aquarium.
+  # A "Question / usage help" link pointed at /discussions, which is disabled on
+  # this repository — it served a 404. Re-add it once Discussions is turned on.
   - name: The original Perl asciiquarium
     url: http://robobunny.com/projects/asciiquarium
     about: This is a Python port. Issues with the original Perl version belong upstream.

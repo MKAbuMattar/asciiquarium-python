@@ -59,7 +59,7 @@ An aquarium/sea animation in ASCII art for your terminal! This is a Python reimp
 - 🐙 Sea monsters lurking in the depths
 - 🌊 Animated blue water lines and seaweed
 - 🏰 Castle decoration
-- � Blue bubbles rising from fish
+- 💙 Blue bubbles rising from fish
 - 🍤 Feed the fish with `F` and watch them chase the flakes down
 - 🎨 Full color support
 - ⌨️ Interactive controls
@@ -99,7 +99,7 @@ That's it! Enjoy your ASCII aquarium! 🐠
 - **`F`** or **`f`** - Drop a flake of food (up to 10 at a time)
 - **`I`** or **`i`** - Show/hide info overlay
 
-## � Requirements
+## 📋 Requirements
 
 - **Python 3.8+** - Works with Python 3.8 through 3.14+
 - **Terminal** - Any terminal with color support (minimum 40x15, recommended 80x24)
@@ -154,17 +154,19 @@ python -m asciiquarium.main
 
 ### Development Requirements
 
-Before submitting any changes, ensure your code passes all checks:
+Before submitting any changes, run the same three commands CI does. All three are clean on
+`main`, so anything they report came from your change:
 
 ```bash
-# Run the formatter
-uv run hatch run fmt
-
-# Run linters (must pass without errors)
-uv run hatch run lint
+uvx ruff check asciiquarium tests
+uvx mypy --ignore-missing-imports asciiquarium
+uvx pytest -q
 ```
 
-All contributions must pass both formatting and linting checks before being merged.
+The tests need no terminal — they cover the geometry, the art invariants and the version
+arithmetic. They cannot tell you whether the aquarium *looks* right: for that, run it at
+80×24 and at the 40×15 minimum, with and without `--classic`, and press `r`. See
+[`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md).
 
 ## 🌟 Features Details
 
@@ -174,7 +176,8 @@ This implementation uses Python's `curses` library and automatically installs `w
 
 ### Entity Types
 
-- **Fish**: 7 different species with unique ASCII art designs and swimming patterns
+- **Fish**: 12 designs with unique ASCII art and swimming patterns (8 ported from the Perl
+  original, 4 new — `--classic` shows only the original 8)
 - **Sharks**: Predators that hunt and eat smaller fish with collision detection
 - **Whales**: Large creatures with animated water spout effects
 - **Ships**: Sail across the surface of the water
@@ -185,7 +188,7 @@ This implementation uses Python's `curses` library and automatically installs `w
 
 ### Animation Features
 
-- **Smooth Animation**: 30 FPS for fluid motion
+- **Animation**: roughly 10 frames per second, paced by the 100 ms input timeout
 - **Z-depth Layering**: Proper entity overlapping
 - **Color Masking**: Detailed multi-color ASCII art
 - **Frame Animation**: Multi-frame animations for complex entities
@@ -198,14 +201,23 @@ This implementation uses Python's `curses` library and automatically installs `w
 asciiquarium-python/
 ├── asciiquarium/
 │   ├── __init__.py
-│   ├── main.py              # Entry point
+│   ├── __version__.py       # Single source of truth for the version
+│   ├── main.py              # CLI entry point, argparse, --info
 │   ├── entity.py            # Base entity class
-│   ├── animation.py         # Animation engine
+│   ├── animation.py         # Animation engine, depth map, draw loop
+│   ├── version_checker.py   # PyPI update poll
 │   └── entities/
 │       ├── __init__.py
-│       ├── fish.py          # Fish entities
-│       ├── environment.py   # Environment entities
-│       └── special.py       # Special entities (sharks, whales, etc.)
+│       ├── fish.py          # Fish designs, bubbles, feeding behaviour
+│       ├── food.py          # Food flakes
+│       ├── environment.py   # Waterlines, castle, seaweed
+│       └── special.py       # Sharks, whales, ships, monsters, ducks, ...
+├── tests/                   # No terminal required
+├── scripts/release_version.py
+├── .github/workflows/       # validate.yml, release.yml
+├── AGENTS.md                # How to work in this repo
+├── ROADMAP.md               # What is queued next
+├── CHANGELOG.md
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
@@ -315,7 +327,7 @@ All ASCII art designs and animation concepts are credited to the original author
 - 📦 [PyPI Package](https://pypi.org/project/asciiquarium/)
 - 🐙 [GitHub Repository](https://github.com/MKAbuMattar/asciiquarium-python)
 - 🌐 [Author Website](https://mkabumattar.com/)
-- � [Original Perl Version](http://robobunny.com/projects/asciiquarium)
+- 🐟 [Original Perl Version](http://robobunny.com/projects/asciiquarium)
 
 ## 🤝 Contributing
 

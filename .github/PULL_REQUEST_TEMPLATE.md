@@ -13,8 +13,9 @@ Tell us what you actually watched:
 
 ## Checklist
 
-- [ ] `uvx ruff check asciiquarium` passes (it reports zero findings on `main`)
+- [ ] `uvx ruff check asciiquarium tests` passes (it reports zero findings on `main`)
 - [ ] `uvx mypy --ignore-missing-imports asciiquarium` passes (also clean on `main`)
+- [ ] `uvx pytest -q` passes (needs no terminal — and is not evidence the screen is right)
 - [ ] Ran it at 80×24 **and** at the 40×15 minimum — nothing clipped or misaligned
 - [ ] Pressed `r` to force a full teardown and rebuild
 - [ ] New or edited ASCII art: the colour mask lines are aligned to the shape **column by

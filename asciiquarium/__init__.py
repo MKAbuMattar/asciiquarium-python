@@ -17,6 +17,10 @@ from .__version__ import (
     __version__,
 )
 
+# No `from .main import main` here: it rebound the name `main` on the package,
+# so `import asciiquarium.main` handed back the function instead of the module.
+# The console script resolves `asciiquarium.main:main` through importlib and is
+# unaffected. Importing the package also no longer pulls in curses.
 __all__ = [
     "__version__",
     "__author__",
@@ -25,7 +29,3 @@ __all__ = [
     "__original_author__",
     "__original_project__",
 ]
-
-from .main import main
-
-__all__ = ["main"]

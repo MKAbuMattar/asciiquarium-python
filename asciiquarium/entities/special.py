@@ -3,6 +3,7 @@ from typing import Any, Callable, List, Optional
 
 from ..animation import DEPTH
 from ..entity import Entity
+from .fish import rand_color
 
 
 def add_shark(old_ent: Optional[Entity], anim: Any):
@@ -367,11 +368,7 @@ def add_big_fish_1(old_ent: Optional[Entity], anim: Any):
     else:
         y = random.randint(max_height, min_height)
 
-    color_mask = big_fish_colors[direction]
-    colors = ["c", "C", "r", "R", "y", "Y", "b", "B", "g", "G", "m", "M"]
-    for i in range(1, 10):
-        color = random.choice(colors)
-        color_mask = color_mask.replace(str(i), color)
+    color_mask = rand_color(big_fish_colors[direction])
 
     anim.new_entity(
         shape=big_fish_shapes[direction],
@@ -456,11 +453,7 @@ def add_big_fish_2(old_ent: Optional[Entity], anim: Any):
     else:
         y = random.randint(max_height, min_height)
 
-    color_mask = big_fish_colors[direction]
-    colors = ["c", "C", "r", "R", "y", "Y", "b", "B", "g", "G", "m", "M"]
-    for i in range(1, 10):
-        color = random.choice(colors)
-        color_mask = color_mask.replace(str(i), color)
+    color_mask = rand_color(big_fish_colors[direction])
 
     anim.new_entity(
         shape=big_fish_shapes[direction],
@@ -669,7 +662,7 @@ def add_dolphins(old_ent: Optional[Entity], anim: Any):
         callback_args=[speed, 0, 0, 0.5],
         death_cb=random_object,
         die_offscreen=True,
-        default_color="blue",
+        default_color="BLUE",
     )
 
     anim.new_entity(

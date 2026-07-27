@@ -83,14 +83,16 @@ class Entity:
         return cleaned
 
     def _update_dimensions(self):
-        """Calculate width and height from current shape"""
-        if self.shapes and self.shapes[0]:
-            lines = self.shapes[0].split("\n")
-            self.height = len(lines)
-            self.width = max(len(line) for line in lines) if lines else 0
-        else:
-            self.height = 0
-            self.width = 0
+        """Calculate width and height across every animation frame.
+
+        The largest frame wins, because size() feeds both collision detection
+        and the die_offscreen test. Measuring only frame 0 culls and collides
+        the whale, the sea monsters and the ducks against a box smaller than
+        the one they are drawn in.
+        """
+        lines = [line for shape in self.shapes if shape for line in shape.split("\n")]
+        self.height = max((len(shape.split("\n")) for shape in self.shapes if shape), default=0)
+        self.width = max((len(line) for line in lines), default=0)
 
     def get_current_shape(self) -> str:
         """Get the current animation frame's shape"""

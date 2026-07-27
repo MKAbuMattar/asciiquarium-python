@@ -4,6 +4,8 @@ Everything here is pure geometry over Entity, so none of it needs curses. The
 draw loop is the only part that does, and it is not what breaks.
 """
 
+from fake_anim import FakeAnim
+
 from asciiquarium.animation import WATER_LINE_BOTTOM
 from asciiquarium.entities.fish import (
     FOOD_RANGE,
@@ -13,24 +15,6 @@ from asciiquarium.entities.fish import (
     nearest_food,
 )
 from asciiquarium.entity import Entity
-
-
-class FakeAnim:
-    """Just enough Animation for the feeding helpers."""
-
-    def __init__(self, entities=(), height=24, width=80):
-        self.entities = list(entities)
-        self._height = height
-        self._width = width
-
-    def get_entities_of_type(self, entity_type):
-        return [e for e in self.entities if e.entity_type == entity_type]
-
-    def height(self):
-        return self._height
-
-    def width(self):
-        return self._width
 
 
 def make_fish(x=10, y=12, speed=1.0):
@@ -129,15 +113,8 @@ def test_food_stops_spawning_at_the_cap():
     from asciiquarium.entities.food import MAX_FOOD, add_food
 
     anim = FakeAnim()
-    anim.new_entity = lambda **kw: _append(anim, kw)
 
     for _ in range(MAX_FOOD + 5):
         add_food(None, anim)
 
     assert len(anim.get_entities_of_type("food")) == MAX_FOOD
-
-
-def _append(anim, kwargs):
-    entity = Entity(**kwargs)
-    anim.entities.append(entity)
-    return entity

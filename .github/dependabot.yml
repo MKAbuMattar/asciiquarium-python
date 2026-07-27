@@ -1,0 +1,12 @@
+version: 2
+updates:
+  # Actions only. The package has one runtime dependency and it is platform
+  # gated, so there is nothing for a pip ecosystem entry to watch.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci"
+    labels:
+      - dependencies
