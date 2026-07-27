@@ -1,0 +1,222 @@
+name: release
+
+# Driven entirely by a pull request:
+#
+#   1. branch off main as  release/2.3.0   (the version comes from the name)
+#   2. open a PR to main and add the  release  label
+#   3. `prepare` bumps the version, pushes it to your branch, and proves it builds
+#   4. merge the PR
+#   5. `publish` tags it, uploads to PyPI, and writes the GitHub Release page
+#
+# The split matters: nothing irreversible happens while the PR is open. Merging
+# is the act that publishes, so the PR diff is a preview of exactly what ships.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, labeled, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Never let two releases race. Not cancel-in-progress: killing a job
+  # halfway through a PyPI upload is how you get a half-published version.
+  group: release-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: prepare ${{ github.event.pull_request.head.ref }}
+    if: >-
+      github.event.pull_request.state == 'open' &&
+      startsWith(github.event.pull_request.head.ref, 'release/') &&
+      contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Read the version out of the branch name
+        id: version
+        run: |
+          version="${GITHUB_HEAD_REF#release/}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing $version" >> "$GITHUB_STEP_SUMMARY"
+
+      # Rejects a malformed or backwards version before anything is written.
+      - name: Check it is a legal next version
+        run: python3 scripts/release_version.py check "${{ steps.version.outputs.version }}"
+
+      - name: Bump the version and roll the changelog
+        run: python3 scripts/release_version.py apply "${{ steps.version.outputs.version }}"
+
+      - name: Push the bump back to the pull request
+        run: |
+          if git diff --quiet; then
+            echo "Already prepared, nothing to push."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(release): v${{ steps.version.outputs.version }}"
+          git push origin "HEAD:${GITHUB_HEAD_REF}"
+
+      # The same gate validate.yml runs. A release must not lower the bar.
+      - name: Lint
+        run: uvx ruff check asciiquarium tests
+
+      - name: Type-check
+        run: uvx mypy --ignore-missing-imports asciiquarium
+
+      - name: Tests
+        run: uvx pytest -q
+
+      - name: Build
+        run: uvx --from build pyproject-build
+
+      - name: Check the metadata PyPI will see
+        run: uvx twine check dist/*
+
+      # Proves the artifact installs and runs before it is ever uploaded.
+      - name: Smoke-test the built wheel
+        run: |
+          set -euo pipefail
+          # Glob, not `ls` — its output is not safe to parse.
+          wheels=(dist/*.whl)
+          [ -e "${wheels[0]}" ] || { echo "::error::no wheel was built"; exit 1; }
+          uvx --from "${wheels[0]}" asciiquarium --version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ steps.version.outputs.version }}
+          path: dist/
+          retention-days: 7
+
+      - name: Say what merging will do
+        uses: actions/github-script@v7
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        with:
+          script: |
+            const version = process.env.VERSION;
+            const body = [
+              `### Release \`v${version}\` is ready`,
+              '',
+              'Prepared and verified. The version bump is committed to this branch,',
+              'lint, types and tests pass, and the built wheel installs and runs.',
+              '',
+              '**Merging this pull request will publish to PyPI.** That cannot be undone —',
+              `PyPI does not allow re-uploading a version, so a mistake means burning \`${version}\`.`,
+              '',
+              'On merge: tag `v' + version + '` &rarr; upload to PyPI &rarr; confirm PyPI serves it &rarr; GitHub Release page.',
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const marker = '### Release `v';
+            const existing = (await github.rest.issues.listComments({ owner, repo, issue_number }))
+              .data.find(c => c.user.type === 'Bot' && c.body.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+  publish:
+    name: publish to PyPI
+    if: >-
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/') &&
+      contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Read the version out of the branch name
+        id: version
+        run: echo "version=${GITHUB_HEAD_REF#release/}" >> "$GITHUB_OUTPUT"
+
+      # Refuses to publish if the merged tree does not actually carry the
+      # version the branch name promises.
+      - name: Confirm the merged tree is at that version
+        run: python3 scripts/release_version.py assert "${{ steps.version.outputs.version }}"
+
+      - name: Build
+        run: uvx --from build pyproject-build
+
+      - name: Check the metadata
+        run: uvx twine check dist/*
+
+      - name: Publish to PyPI
+        env:
+          # Repository secret. Settings -> Secrets and variables -> Actions.
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then
+            echo "::error::PYPI_API_TOKEN is not set. Add it under" \
+                 "Settings > Secrets and variables > Actions, or as a secret on" \
+                 "the 'pypi' environment."
+            exit 1
+          fi
+          uvx twine upload --non-interactive dist/*
+
+      # An upload can succeed and still serve nothing. Poll until it is real.
+      - name: Confirm PyPI is serving it
+        run: python3 scripts/release_version.py verify "${{ steps.version.outputs.version }}"
+
+      - name: Tag the release commit
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$version" -m "asciiquarium v$version"
+          git push origin "v$version"
+
+      - name: Changelog section for the release body
+        id: notes
+        run: |
+          {
+            echo 'body<<RELEASE_NOTES_EOF'
+            python3 scripts/release_version.py notes "${{ steps.version.outputs.version }}"
+            echo 'RELEASE_NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create the GitHub Release page
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          body: |
+            ${{ steps.notes.outputs.body }}
+
+            ---
+
+            ```bash
+            pipx install asciiquarium==${{ steps.version.outputs.version }}
+            ```
+
+            [PyPI](https://pypi.org/project/asciiquarium/${{ steps.version.outputs.version }}/)
+          files: dist/*
+          make_latest: true

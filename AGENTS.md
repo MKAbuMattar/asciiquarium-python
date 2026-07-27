@@ -77,7 +77,9 @@ Same pattern for fish (`death_cb=add_fish`) and seaweed (`death_cb=add_seaweed`)
 | `uv run asciiquarium` | Run it. Needs a real TTY of at least 40×15. |
 | `hatch run lint` | `ruff check asciiquarium` then `mypy asciiquarium`. |
 | `hatch run fmt` | `isort` then `black` over the package. |
+| `uvx pytest -q` | Run the tests. No terminal required. |
 | `python -m build` | Build sdist + wheel via hatchling. |
+| `python3 scripts/release_version.py status` | This checkout's version vs what PyPI is serving. |
 | `grep -rnE '(#\|//) ?ponytail:' .` | Deferred-shortcut ledger. |
 
 There is no test suite yet. **Verifying a change means running it in a terminal and
@@ -107,11 +109,41 @@ A curses app cannot be diffed. When changing the renderer, art, or colour masks:
 - Keep the package dependency-free on Linux and macOS. `windows-curses` is the one
   exception and it is platform-gated in `pyproject.toml`.
 
+## Releasing
+
+Never bump the version by hand — `.github/workflows/release.yml` owns it.
+
+```bash
+git switch -c release/2.3.0        # the branch name IS the version
+git push -u origin release/2.3.0
+gh pr create --base main --label release --title "Release v2.3.0"
+```
+
+Adding the `release` label starts the `prepare` job: it rewrites
+`asciiquarium/__version__.py` and `pyproject.toml`, rolls `CHANGELOG.md`'s
+`## [Unreleased]` into a dated section, pushes that commit back to your branch, runs the
+full gate, builds, and installs the wheel to check it actually runs. It then comments on the
+pull request with what merging will do.
+
+**Merging the pull request publishes to PyPI.** That is the irreversible step, and it is
+deliberately the only one: PyPI does not allow re-uploading a version, so a mistaken merge
+burns that version number permanently. The `publish` job re-checks that the merged tree
+carries the version its branch name promises, uploads, polls PyPI until it is really being
+served, tags `v2.3.0`, and writes the Release page.
+
+The version must be strictly newer than the current one; the pipeline refuses otherwise.
+Preparation is idempotent, so pushing more commits to the branch re-runs it safely.
+
+`python3 scripts/release_version.py` does all the version bookkeeping and is worth running
+locally — `status` compares this checkout against PyPI, `check 2.3.0` tells you whether a
+version would be accepted before you push anything.
+
 ## Hard rules
 
-- **`hatch run lint` must pass** before commit.
-- **Bump `__version__` in `asciiquarium/__version__.py`** — it is the single source of truth;
-  `pyproject.toml`'s `version` must be kept in step with it.
+- **`uvx ruff check asciiquarium tests` and `uvx mypy --ignore-missing-imports asciiquarium`
+  must pass** before commit. Both are clean on `main`, so anything they report is yours.
+- **Never edit the version by hand.** `asciiquarium/__version__.py` is the source of truth
+  and `pyproject.toml` mirrors it, but the release pipeline is what writes both.
 - **Add a `CHANGELOG.md` entry** for anything a user would notice.
 - **Clean commits.** Conventional-commit subject + body. **No** `Co-Authored-By` trailer,
   **no** "Generated with Claude Code", **no** Opus/Anthropic/AI mention of any kind.
