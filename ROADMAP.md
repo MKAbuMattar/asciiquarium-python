@@ -24,7 +24,7 @@ is a defect a user can hit today; every item names the evidence rather than the 
 | # | Increment | Status |
 |---|---|---|
 | 7 | **CI.** `.github/workflows/validate.yml` runs `ruff`, `mypy`, an import sweep and CLI smoke check across every supported Python version, a build, and a check that `__version__.py` and `pyproject.toml` agree. Both linters report zero findings on `main`, so the gate is meaningful from day one: anything red was introduced by the change under review. Nothing had ever been checked automatically before. | ✅ done |
-| 8 | **A smoke test.** `pytest` is a declared dev dependency and there are zero test files. The renderer needs a TTY, but the parts that actually break do not: `Entity` sizing and death conditions, `parse_version`/`is_newer_version`, `rand_color` leaving no stray digits, and every shape/colour-mask pair in the entity modules having matching line counts. That last one is a real test — mask misalignment is this codebase's most common silent failure. Wire it into the existing workflow. | planned |
+| 8 | **A smoke test.** `pytest` was a declared dev dependency with zero test files. `tests/test_feeding.py` broke the seal — the feeding geometry, no terminal required — and CI runs it. Still to cover: `Entity` sizing and death conditions, `parse_version`/`is_newer_version`, `rand_color` leaving no stray digits, and every shape/colour-mask pair having matching line counts. That last one matters most; mask misalignment is this codebase's most common silent failure. | in progress |
 
 ## Phase 3 — Consolidation
 
@@ -54,7 +54,8 @@ is a defect a user can hit today; every item names the evidence rather than the 
 
 | # | Item | Status |
 |---|---|---|
-| 23 | **PR #7 — interactive fish feeding.** The feeding mechanic is worth having: mouth-position hit detection and directional food preference are more considered than the feature needed. It cannot merge as it stands. It does not import on Python 3.8 (`-> tuple[str, str]` at `animation.py:416`), it takes `ruff` from 0 to 11 findings and `mypy` from 0 to 16, and its Happy Fish mode recolours the whole screen every 200 ms for ten seconds with no opt-out — see the accessibility note in `.github/CONTRIBUTING.md`. It is also four features under a one-feature title, one of which (`e`) is bound but undocumented, plus a README section and five binary assets belonging to a different repository. Ask for a split: feeding alone first, Happy Fish behind a rate cap second, the overlay refactor third and only if it actually fixes (18). | changes requested |
+| 23 | **PR #7 — interactive fish feeding.** Not merged as submitted: it did not import on Python 3.8 (`-> tuple[str, str]`), took `ruff` from 0 to 11 findings and `mypy` from 0 to 16, and bundled four features under a one-feature title — one of them (`e`) bound but undocumented — plus a README section and five binary assets belonging to a different repository. The **feeding mechanic underneath was worth keeping** and has landed reworked, with attribution, on `feat/fish-feeding`. The remaining question for the author is Happy Fish mode. | feeding landed |
+| 24 | **Happy Fish mode, if it comes back.** PR #7's version recoloured every creature on screen every 200 ms for ten seconds with no way to turn it off, which is the reason it did not land with the feeding. It is a fun idea and the rejection was about the rate, not the concept. Wanted: a capped change rate, off by default or at least interruptible, and no full-body recolour of every entity every frame — that path rebuilt a complete colour mask per shape frame per entity per frame. | open question |
 
 ## Rejected on purpose
 

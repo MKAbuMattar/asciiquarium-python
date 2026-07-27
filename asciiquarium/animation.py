@@ -44,6 +44,10 @@ DEPTH = {
     "water_gap0": 9,
 }
 
+# First row below the waterline band that a fish may occupy. The same number is
+# still spelled literally in several places under entities/ — see ROADMAP item 14.
+WATER_LINE_BOTTOM = 9
+
 
 class Animation:
     """Main animation controller that manages the screen and all entities"""
@@ -322,11 +326,13 @@ class Animation:
                 "    • Animated blue water lines and seaweed",
                 "    • Castle decoration",
                 "    • Blue bubbles rising from fish",
+                "    • Feed the fish and watch them chase the flakes",
                 "",
                 "  CONTROLS:",
                 "    Q or q  - Quit the aquarium",
                 "    P or p  - Pause/unpause animation",
                 "    R or r  - Redraw and respawn entities",
+                "    F or f  - Drop food for the fish",
                 "    I or i  - Show/hide this info screen",
                 "",
                 "  CREDITS:",
@@ -359,6 +365,10 @@ class Animation:
         """Main animation loop"""
 
         def _run(stdscr):
+            # ponytail: local import dodges the entities<->animation cycle,
+            # per-run rather than per-keypress. Fix properly via ROADMAP item 15.
+            from .entities.food import add_food
+
             self.init_screen(stdscr)
             self.running = True
 
@@ -383,6 +393,9 @@ class Animation:
                             elif key_char == "p":
                                 if not showing_info:
                                     paused = not paused
+                            elif key_char == "f":
+                                if not paused and not showing_info:
+                                    add_food(None, self)
                             elif key_char == "i":
                                 showing_info = not showing_info
                                 if showing_info:

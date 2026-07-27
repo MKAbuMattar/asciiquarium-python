@@ -32,6 +32,11 @@ jobs:
       - name: Mypy
         run: uvx mypy --ignore-missing-imports asciiquarium
 
+      # No terminal needed: the geometry and lifecycle logic is testable, the
+      # draw loop is the only part that isn't, and it isn't what breaks.
+      - name: Tests
+        run: uvx pytest -q
+
   import:
     name: imports on ${{ matrix.python-version }}
     runs-on: ubuntu-latest

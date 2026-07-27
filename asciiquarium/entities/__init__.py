@@ -1,5 +1,6 @@
 from .environment import add_all_seaweed, add_castle, add_environment, add_seaweed
 from .fish import add_all_fish, add_fish
+from .food import add_food
 from .special import (
     add_big_fish,
     add_dolphins,
@@ -16,6 +17,7 @@ from .special import (
 __all__ = [
     "add_fish",
     "add_all_fish",
+    "add_food",
     "add_environment",
     "add_castle",
     "add_seaweed",
