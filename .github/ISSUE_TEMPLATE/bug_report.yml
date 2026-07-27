@@ -1,0 +1,86 @@
+name: Bug report
+description: It crashes, hangs, exits unexpectedly, or does not behave as documented.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For art that renders but looks wrong, use **Rendering problem** instead — it asks
+        for the terminal details that make that kind of report actionable.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what it did, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Traceback or error output
+      description: The full traceback, if there was one. Don't trim it.
+      render: shell
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. pipx install asciiquarium
+        2. Run `asciiquarium --classic` in an 80×24 terminal
+        3. Resize the window to 40 columns
+        4. ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "Run: asciiquarium --version"
+      placeholder: "asciiquarium/2.2.0 Python/3.12.3 Linux/6.8.0 x86_64"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install it?
+      options:
+        - pipx
+        - pip
+        - uv
+        - From source
+        - Distribution package
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: terminal
+    attributes:
+      label: Terminal emulator
+      placeholder: "Windows Terminal 1.19 / kitty 0.32 / iTerm2 3.5"
+
+  - type: dropdown
+    id: latest
+    attributes:
+      label: Are you on the latest release?
+      description: "Fixes only land on the latest PyPI release. `pipx upgrade asciiquarium`"
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: terminal_state
+    attributes:
+      label: Was your terminal left in a broken state afterwards?
+      description: |
+        Invisible cursor, no echo when typing, garbled colours. If so, say whether `reset`
+        fixed it — that points at where the curses teardown went wrong.
