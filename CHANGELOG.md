@@ -8,6 +8,8 @@ The version lives in `asciiquarium/__version__.py` and is mirrored in `pyproject
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-07-27
+
 ### Fixed
 
 - **The upgrade notice no longer lands on top of the aquarium.** The PyPI poll ran on a
@@ -119,6 +121,7 @@ Releases before 2.2.0 predate this changelog. See the
 [commit history](https://github.com/MKAbuMattar/asciiquarium-python/commits/main) and the
 [releases page](https://github.com/MKAbuMattar/asciiquarium-python/releases).
 
-[Unreleased]: https://github.com/MKAbuMattar/asciiquarium-python/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/MKAbuMattar/asciiquarium-python/compare/v2.3.1...HEAD
+[2.3.1]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.3.1
 [2.3.0]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.3.0
 [2.2.0]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.2.0
