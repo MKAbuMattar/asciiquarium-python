@@ -25,9 +25,15 @@ Tell us what you actually watched:
 - [ ] No new dependency (`windows-curses` is the only one, and it is platform-gated)
 - [ ] Nothing writes to stdout while the animation is running
 - [ ] New keybindings are documented in the README **and** the in-app info overlay
-- [ ] `CHANGELOG.md` updated if a user would notice the change
-- [ ] Version bumped in `asciiquarium/__version__.py` **and** `pyproject.toml` if releasing
+- [ ] `CHANGELOG.md` updated under `## [Unreleased]` if a user would notice the change
+- [ ] Version **not** touched by hand — the release pipeline owns it (see below)
 - [ ] Conventional-commit messages, no `Co-Authored-By` / AI-assistant trailer
+
+<!--
+RELEASING: don't edit versions here. Branch as release/<version>, open a PR to
+main, add the `release` label. Preparing is safe and repeatable; MERGING is what
+publishes to PyPI and cannot be undone. See the Releasing section in AGENTS.md.
+-->
 
 ## Scope
 
