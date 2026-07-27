@@ -2,9 +2,10 @@
 
 Thanks for wanting to improve the aquarium.
 
-This is a small package: one dependency, no build step, no test suite yet. That makes it
-easy to contribute to and easy to break in ways nobody notices until a user opens a
-terminal. Most of what follows is about the second half of that sentence.
+This is a small package: one dependency, no build step, and a test suite that deliberately
+stops at the edge of the screen. That makes it easy to contribute to and easy to break in
+ways nobody notices until a user opens a terminal. Most of what follows is about the second
+half of that sentence.
 
 ## Setup
 
@@ -18,12 +19,17 @@ uv run asciiquarium
 ## Before you open a pull request
 
 ```bash
-uvx ruff check asciiquarium
+uvx ruff check asciiquarium tests
 uvx mypy --ignore-missing-imports asciiquarium
+uvx pytest -q
 ```
 
-Both report **zero findings on `main`**. If either one reports something, it came from your
-change. CI runs the same two commands.
+All three are **clean on `main`**. If any of them reports something, it came from your
+change. CI runs the same three commands.
+
+`uv sync` installs no dev tools — the dependency groups in `pyproject.toml` still need
+consolidating (`ROADMAP` item 10) — which is why these are `uvx` invocations that fetch what
+they need on the spot.
 
 ## Verifying a change you cannot see in a diff
 

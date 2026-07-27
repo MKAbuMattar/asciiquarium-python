@@ -8,6 +8,56 @@ The version lives in `asciiquarium/__version__.py` and is mirrored in `pyproject
 
 ## [Unreleased]
 
+### Fixed
+
+- **The upgrade notice no longer lands on top of the aquarium.** The PyPI poll ran on a
+  background thread that printed a twenty-line box straight into the curses screen if the
+  answer arrived in time. Curses never knew it happened, so nothing could repaint over it.
+  The poll is silent now and the notice prints once the animation has given the terminal
+  back.
+- **Multi-frame creatures are measured across all of their frames.** `Entity.size()` reported
+  frame 0's dimensions, and it feeds both collision detection and the offscreen cull — so the
+  whale, the sea monsters and the ducks were being culled and collided against a box smaller
+  than the one they are drawn in.
+- The lead dolphin asked for `"blue"`; colour names are uppercase, so it swam past uncoloured.
+- `--info` claimed Python 3.7 and an 80×24 minimum (the code enforces 3.8 and 40×15) and did
+  not mention the feeding key, which shipped in 2.3.0.
+- `asciiquarium/__init__.py` assigned `__all__` twice, and the second assignment dropped every
+  version symbol the first one exported. It also rebound `main` to the *function*, so
+  `import asciiquarium.main` handed back the function instead of the module. The convenience
+  import is gone; `import asciiquarium` no longer pulls in curses as a side effect.
+- **The release pipeline could fail a release that had actually succeeded.** Its post-upload
+  check polled `info.version` on PyPI's project endpoint, which is CDN-cached and lags: after
+  2.3.0 was published that document kept reporting 2.2.0 for minutes while the release was
+  already installable. It now asks the per-version URL, which answers immediately, and a
+  transient 5xx is retried instead of aborting the release. `tests/test_release_version.py`
+  covers both directions, since a false negative fails a good release and a false positive
+  would tag one that never uploaded.
+- README: three emoji had been corrupted into replacement characters, the troubleshooting
+  section contradicted the requirements section on the minimum terminal size, "30 FPS" was
+  never true (pacing comes from the 100 ms input timeout), the fish count was out of date, and
+  the project tree and development commands had drifted from the repository.
+
+### Added
+
+- `py.typed`, so the annotations are visible to anything installing this package.
+- The CI import sweep covers Python 3.14, which the classifiers had claimed without ever being
+  tested. Windows and macOS stay out of CI on purpose — those runners bill at 2x and 10x
+  against a free-tier budget.
+- `tests/test_art.py` covers the invariants that fail silently — every fish design pairing its
+  shape frames with mask frames, masks covering every row, no placeholder digit surviving
+  `rand_color`, and every spawned entity naming a colour the renderer actually knows.
+  `tests/test_cli.py` covers the version arithmetic, the upgrade notice, and the `--info`
+  text, so the feeding key cannot quietly fall out of it again.
+- `.github/dependabot.yml` for the actions, and a `CODEOWNERS` file — `main` was set to
+  require code-owner review with no code owners defined, which matched nobody.
+
+### Changed
+
+- `special.py` imports `rand_color` instead of inlining the same twelve-colour loop twice.
+- The dead "Question / usage help" contact link is gone; it pointed at Discussions, which is
+  disabled on this repository.
+
 ## [2.3.0] - 2026-07-27
 
 ### Added

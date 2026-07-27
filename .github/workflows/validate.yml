@@ -46,7 +46,7 @@ jobs:
         # Must match `requires-python` and the classifiers in pyproject.toml.
         # The animation needs a TTY, but importing it does not — and a syntax
         # or typing construct too new for the floor fails right here.
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
 
@@ -77,6 +77,10 @@ jobs:
         run: |
           uvx --python ${{ matrix.python-version }} --from . asciiquarium --version
           uvx --python ${{ matrix.python-version }} --from . asciiquarium --info > /dev/null
+
+  # No Windows or macOS job here on purpose: those runners bill at 2x and 10x
+  # against a free-tier minute budget, and this is a screensaver. Windows and
+  # macOS coverage stays manual — see ROADMAP item 28.
 
   build:
     name: build

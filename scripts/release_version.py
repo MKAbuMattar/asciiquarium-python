@@ -23,6 +23,8 @@ import pathlib
 import re
 import sys
 import time
+import urllib.error
+import urllib.request
 from typing import Optional, Tuple
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -180,18 +182,44 @@ def status() -> None:
         print(f"\n  Behind. PyPI has v{live}; this checkout is v{local}.")
 
 
-def verify(version: str, attempts: int = 10, delay: float = 6.0) -> None:
-    """Block until PyPI serves `version`, so a no-op upload cannot pass.
+def is_on_pypi(version: str) -> bool:
+    """Does this exact version exist on PyPI?
 
-    Publishing succeeds long before the CDN catches up, so a single immediate
-    check reports the old version and looks like a failed release.
+    Asks the per-version URL rather than reading `info.version` off the project
+    endpoint. That aggregate document is CDN-cached and lags: after 2.3.0 went
+    out it kept reporting 2.2.0 for minutes while the release was already
+    installable. Polling it means a good publish can be reported as a failure.
+    """
+    url = f"https://pypi.org/pypi/asciiquarium/{version}/json"
+    try:
+        with urllib.request.urlopen(url, timeout=5) as response:
+            return bool(200 <= response.status < 300)
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return False
+        raise
+    except (urllib.error.URLError, TimeoutError):
+        return False
+
+
+def verify(version: str, attempts: int = 10, delay: float = 6.0) -> None:
+    """Block until PyPI has `version`, so a no-op upload cannot pass.
+
+    An upload can exit 0 and serve nothing, so the release is not finished
+    until PyPI answers for this exact version.
     """
     for attempt in range(1, attempts + 1):
-        live = published()
-        if live == version:
-            print(f"PyPI is serving {version}")
-            return
-        print(f"  attempt {attempt}/{attempts}: PyPI has {live or 'no answer'}", flush=True)
+        try:
+            if is_on_pypi(version):
+                print(f"PyPI has {version}")
+                return
+            note = "not on PyPI yet"
+        except urllib.error.HTTPError as exc:
+            # A 5xx means PyPI is unwell, not that the upload failed. Keep
+            # polling; if it never clears, the loop still ends in a failure.
+            note = f"PyPI returned {exc.code}"
+
+        print(f"  attempt {attempt}/{attempts}: {note}", flush=True)
         if attempt < attempts:
             time.sleep(delay)
 

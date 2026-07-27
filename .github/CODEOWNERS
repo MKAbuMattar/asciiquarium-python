@@ -1,0 +1,3 @@
+# `main` is protected with "require review from Code Owners" on, and without
+# this file that setting matches nothing and reviews nobody.
+* @MKAbuMattar

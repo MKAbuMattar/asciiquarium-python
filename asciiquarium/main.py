@@ -3,6 +3,7 @@ import platform
 import signal
 import sys
 import threading
+from typing import List, Optional
 
 from .__version__ import (
     __author__,
@@ -20,7 +21,7 @@ from .entities import (
     add_environment,
     random_object,
 )
-from .version_checker import check_for_updates
+from .version_checker import check_for_updates, print_update_notice
 
 
 def setup_aquarium(anim: Animation, classic_mode: bool = False):
@@ -62,6 +63,7 @@ FEATURES:
   🌊 Animated blue water lines and seaweed
   🏰 Castle decoration
   💙 Blue bubbles rising from fish
+  🍤 Feed the fish and watch them chase the flakes
   🎨 Full color support
   ⌨️  Interactive controls
 
@@ -69,12 +71,13 @@ CONTROLS:
   Q or q  - Quit the aquarium
   P or p  - Pause/unpause animation
   R or r  - Redraw and respawn entities
+  F or f  - Drop a flake of food for the fish
   I or i  - Show/hide info screen (press I or ESC to return)
 
 REQUIREMENTS:
-  • Python 3.7 or higher
+  • Python 3.8 or higher
   • Terminal with color support
-  • Minimum terminal size: 80x24
+  • Minimum terminal size: 40x15 (80x24 recommended)
 
 PLATFORM SUPPORT:
   ✓ Windows (with windows-curses)
@@ -176,7 +179,15 @@ def main():
             print("✓ You are running the latest version!")
         sys.exit(0)
 
-    update_thread = threading.Thread(target=check_for_updates, daemon=True)
+    # The poll runs in the background but must not print: once curses starts,
+    # the terminal is its own and a stray write leaves artefacts nothing can
+    # repaint over. The result is stashed and printed after the screen is back.
+    pending_update: List[Optional[str]] = [None]
+
+    def poll_for_update() -> None:
+        pending_update[0] = check_for_updates(silent=True)
+
+    update_thread = threading.Thread(target=poll_for_update, daemon=True)
     update_thread.start()
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -207,6 +218,9 @@ def main():
         sys.exit(1)
     finally:
         update_thread.join(timeout=0.5)
+
+    if pending_update[0]:
+        print_update_notice(pending_update[0])
 
 
 def cli_main():
