@@ -1,0 +1,103 @@
+name: Rendering problem
+description: The aquarium runs, but something looks wrong — wrong colours, garbled art, clipping, flicker.
+title: "render: "
+labels: ["rendering"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        "It looks wrong" depends almost entirely on your terminal. The same build renders
+        differently across emulators, `$TERM` values, locales, fonts, and window sizes, so
+        the four fields below are what make a report reproducible. Without them there is
+        usually nothing to go on.
+
+        If the program **crashes or exits**, use **Bug report** instead.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What looks wrong
+      description: Which creature or element, and what you expected instead.
+      placeholder: "The dolphins render with no colour at all; the whale is fine."
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot or copied text
+      description: |
+        A screenshot is best. Copied terminal text also works — paste it in a code block so
+        the spacing survives. Spacing is usually the whole story.
+    validations:
+      required: true
+
+  - type: input
+    id: terminal
+    attributes:
+      label: Terminal emulator
+      placeholder: "kitty 0.32 / Windows Terminal 1.19 / iTerm2 3.5 / GNOME Terminal 3.50"
+    validations:
+      required: true
+
+  - type: input
+    id: term_env
+    attributes:
+      label: TERM and COLORTERM
+      description: "Run: echo \"$TERM / $COLORTERM\""
+      placeholder: "xterm-256color / truecolor"
+    validations:
+      required: true
+
+  - type: input
+    id: size
+    attributes:
+      label: Terminal size
+      description: "Run: stty size   (rows columns). The minimum supported is 40 columns × 15 rows."
+      placeholder: "24 80"
+    validations:
+      required: true
+
+  - type: input
+    id: locale
+    attributes:
+      label: Locale
+      description: "Run: locale | head -1 — a non-UTF-8 locale breaks the box-drawing characters."
+      placeholder: "LANG=en_US.UTF-8"
+
+  - type: input
+    id: version
+    attributes:
+      label: asciiquarium version
+      description: "Run: asciiquarium --version"
+      placeholder: "asciiquarium/2.2.0 Python/3.12.3 Linux/6.8.0 x86_64"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: classic
+    attributes:
+      label: Does it also happen with --classic?
+      options:
+        - "Yes, both modes"
+        - "No, only in the default mode"
+        - "Only with --classic"
+        - "Haven't tried"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: persists
+    attributes:
+      label: Does pressing `r` (redraw and respawn) fix it?
+      options:
+        - "No, it stays wrong"
+        - "Yes, it clears up"
+        - "Temporarily, then comes back"
+        - "Haven't tried"
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: "Multiplexer (tmux/screen), SSH, font, or anything else between you and the pixels."
