@@ -64,6 +64,20 @@ is a defect a user can hit today; every item names the evidence rather than the 
 | 32 | **A pre-release on PyPI silently disables the notice.** `parse_version` returns `(0, 0, 0)` for anything non-numeric, so if PyPI ever serves `2.4.0rc1` the comparison reads it as older than everything and no upgrade is ever announced. Harmless today because releases are plain semver; a one-line guard, or ignore pre-releases deliberately. | planned |
 | 33 | **The prepare job's premise about retriggering is wrong.** `release_version.py check` documents itself as tolerating the re-run caused when prepare pushes the bump back to the branch. Pushes made with `GITHUB_TOKEN` do not trigger workflow runs, so that second run does not happen — the idempotence is still worth having, but the comment explains something that cannot occur. Separately, `prepare` cannot work from a fork: `pull_request` grants a read-only token there, so the push step fails. Both are documentation fixes, not behaviour ones. | planned |
 
+## Phase 6 — Features and knobs
+
+Additions rather than repairs. Each one drops into the architecture that is already here: a
+spawner appended to a list, a flag parsed in `main()`, extra frames on an entity. Nothing in
+this phase needs the renderer, the entity model, or the module layout rearranged first.
+
+| # | Increment | Status |
+|---|---|---|
+| 34 | **`--seed` for reproducible runs.** The standing problem in this repo is that a curses app cannot be verified from a diff, and every check written so far has had to assert weak properties ("a `#` appears somewhere") because the scene is random. Seeding the module RNG at startup makes a pty capture a comparable artefact between runs, which is the missing half of every rendering test — and it makes a bug report reproducible instead of anecdotal. One `random.seed()` call and an `argparse` flag; unblocks real render tests without touching the renderer. Highest value per line in this phase. | planned |
+| 35 | **More creatures.** A crab walking the seabed, a scuba diver, a submarine, a treasure chest. Purely additive: `RANDOM_OBJECTS` is a list of spawner functions and adding one is an append, which is exactly why the plugin system below stays rejected. The chest is the interesting one — it rests on the seabed, bubbles occasionally, and draws *behind* the fish, so it exercises the `DEPTH` map instead of just adding another thing that moves left. Each needs its colour mask aligned column by column, and (31) is the standing reminder that this is where the silent bugs live. | planned |
+| 36 | **Expose the tuning constants as flags.** `--fps`, `--speed`, `--density`, `--no-castle`. Deliberately flags and not the config file rejected below: one `argparse` line and one existing constant made a parameter, with no schema, no search path, and no migration story. `--density` maps onto the existing `screen_size // 350` fish count. `--fps` only becomes meaningful once (2) gives the loop a real clock, so it belongs after (2) — added before, the flag would lie. | planned |
+| 37 | **Double-buffered drawing.** `animate()` does `erase()`, paints every entity, then `refresh()`, so a slow frame can present a partially drawn scene as tearing. Reinforces (17) rather than competing with it: batching runs of same-coloured characters and presenting one finished buffer are the same change approached from either end. | planned |
+| 38 | **Fish turning.** A fish reversing direction currently swaps sprite and sign in one frame. Animating it — shrink, flip, expand — fits the existing frame-list model as extra frames plus a state flag, with no new machinery. Cosmetic, and the kind of detail that makes the aquarium feel hand-made rather than generated. | planned |
+
 ## In flight
 
 | # | Item | Status |
@@ -75,7 +89,20 @@ is a defect a user can hit today; every item names the evidence rather than the 
 
 - **A config file for speeds, colours, and spawn rates.** The ported constants are the
   original's feel. A settings layer nobody has asked for turns one number into a schema, a
-  parser, a search path, and a migration story.
+  parser, a search path, and a migration story — and once it exists it grows, because every
+  constant becomes a candidate. Item (36) takes the few knobs that earn their keep as plain
+  flags instead. Revisit only if someone actually asks.
+- **A backend abstraction over the renderer.** Windowed and browser output both need a layer
+  between the entities and every `addch` call, plus the deployment machinery that follows.
+  That is a different project rather than a larger version of this one. Covered from the other
+  direction by "Rendering to anything but a terminal" above.
+- **A steering or utility-AI subsystem for movement.** A fish here is a velocity in
+  `callback_args` plus a callback, and the feeding pursuit added in 2.3.0 is about twenty
+  lines inside that model. Replacing it with a behaviour framework — brains, steering
+  vectors, utility scoring — would rewrite every entity to fix motion nobody has complained
+  about. Individual behaviours (a fish that idles, one that schools) can be written as
+  callbacks if they are ever wanted, which is the cheap half of the idea without the
+  framework.
 - **An entity plugin system.** `RANDOM_OBJECTS` is a list of functions; adding a creature is
   appending to it. An interface with one implementation would be strictly more code.
 - **Replacing `curses` with a TUI framework.** Textual or Rich would each add a dependency
