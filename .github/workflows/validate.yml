@@ -27,7 +27,7 @@ jobs:
       # Both currently pass on main with zero findings, so any error here was
       # introduced by the change under review.
       - name: Ruff
-        run: uvx ruff check asciiquarium
+        run: uvx ruff check asciiquarium tests
 
       - name: Mypy
         run: uvx mypy --ignore-missing-imports asciiquarium
