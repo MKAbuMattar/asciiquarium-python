@@ -8,6 +8,22 @@ The version lives in `asciiquarium/__version__.py` and is mirrored in `pyproject
 
 ## [Unreleased]
 
+### Fixed
+
+- **Holding a key no longer speeds the aquarium up.** There was no frame clock. Pacing was a
+  side effect of the 100 ms input timeout, and a keypress returns from that timeout early, so
+  every early return drew a frame: at a normal keyboard repeat rate the animation ran close to
+  five times too fast. Measured at 9.9 frames a second idle and 47.7 under key repeat before
+  the change; 9.9 and 10.0 after. Frames are now scheduled against a monotonic deadline, and
+  the input timeout does nothing but wait for input.
+
+  The deadline advances by whole intervals rather than from the current time, so drawing time
+  does not accumulate into the period and the rate stays put over a long run. If the process
+  is starved for longer than one interval, it drops the frames it missed instead of queueing a
+  burst to catch up, which is what would otherwise make the aquarium lurch after the terminal
+  was suspended or resized. The rate itself is unchanged at ten frames a second, but it is now
+  named (`FRAME_INTERVAL`) rather than implied by `curses.halfdelay(1)`.
+
 ## [2.3.1] - 2026-07-27
 
 ### Fixed

@@ -48,6 +48,24 @@ DEPTH = {
 # still spelled literally in several places under entities/ — see ROADMAP item 14.
 WATER_LINE_BOTTOM = 9
 
+# Ten frames a second. This was already the cadence, but only as a side effect
+# of the 100 ms input timeout, which meant a keypress bought an extra frame.
+# ROADMAP item 36 exposes it as --fps.
+FRAME_INTERVAL = 0.1
+
+
+def next_deadline(now: float, deadline: float, interval: float = FRAME_INTERVAL) -> float:
+    """When the frame after this one is due.
+
+    Advances by whole intervals from the previous deadline so the rate does not
+    drift late by however long each frame took to draw. If the process was
+    starved for longer than one interval — suspended, or a slow redraw on a
+    large terminal — it gives up on the frames it missed and re-bases on now,
+    rather than queueing a burst to catch up.
+    """
+    advanced = deadline + interval
+    return advanced if advanced > now else now + interval
+
 
 class Animation:
     """Main animation controller that manages the screen and all entities"""
@@ -377,6 +395,13 @@ class Animation:
             paused = False
             showing_info = False
 
+            # getch() still blocks for up to 100 ms, so it remains the thing
+            # that keeps this loop from spinning. What it no longer decides is
+            # when a frame happens: that is this deadline. Previously a key
+            # returned getch() early and every early return drew a frame, so
+            # holding any key ran the aquarium at the keyboard's repeat rate.
+            next_frame = time.monotonic()
+
             try:
                 while self.running:
                     try:
@@ -418,10 +443,13 @@ class Animation:
                     except Exception:
                         pass
 
-                    if not paused and not showing_info:
-                        self.animate()
-                    elif showing_info:
-                        pass
+                    now = time.monotonic()
+                    if now >= next_frame:
+                        # Advance even while paused, so unpausing resumes at the
+                        # normal rate instead of firing every frame it sat out.
+                        next_frame = next_deadline(now, next_frame)
+                        if not paused and not showing_info:
+                            self.animate()
 
             except KeyboardInterrupt:
                 self.running = False
