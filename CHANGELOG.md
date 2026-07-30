@@ -8,6 +8,8 @@ The version lives in `asciiquarium/__version__.py` and is mirrored in `pyproject
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-07-30
+
 ### Fixed
 
 - **Resizing the terminal did nothing at all.** Not "handled badly" — ignored. `main()`
@@ -159,7 +161,8 @@ Releases before 2.2.0 predate this changelog. See the
 [commit history](https://github.com/MKAbuMattar/asciiquarium-python/commits/main) and the
 [releases page](https://github.com/MKAbuMattar/asciiquarium-python/releases).
 
-[Unreleased]: https://github.com/MKAbuMattar/asciiquarium-python/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/MKAbuMattar/asciiquarium-python/compare/v2.4.1...HEAD
+[2.4.1]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.4.1
 [2.4.0]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.4.0
 [2.3.1]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.3.1
 [2.3.0]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.3.0
