@@ -78,6 +78,9 @@ class Animation:
         self.screen_width: int = 0
         self.screen_height: int = 0
         self.color_pairs: Dict[str, int] = {}
+        # Set when the loop must stop for something the user has to see, but
+        # which cannot be printed while curses owns the terminal.
+        self.pending_error: Optional[BaseException] = None
         self._init_color_pairs()
 
     def _init_color_pairs(self) -> None:
@@ -153,6 +156,20 @@ class Animation:
                     f"Terminal too small! Need at least 40x15, got {self.screen_width}x{raw_height}.\n"
                     "Please resize your terminal and try again."
                 )
+
+    def handle_resize(self, setup_callback: Callable) -> None:
+        """Take on the new terminal size and rebuild the scene for it.
+
+        Every entity was placed against the old geometry: the waterlines are
+        tiled to the old width, the castle is anchored to the old right edge,
+        and the seaweed sits at the old floor. Updating the two dimensions and
+        leaving it there is what made a resize look broken until the next `r`.
+        Rebuilding is exactly what `r` already does.
+        """
+        self.update_term_size()
+        self.remove_all_entities()
+        setup_callback(self)
+        self.redraw_screen()
 
     def width(self) -> int:
         """Get screen width"""
@@ -435,11 +452,19 @@ class Animation:
                                     paused = False
                                     self.redraw_screen()
                             elif key == curses.KEY_RESIZE:
-                                self.update_term_size()
+                                try:
+                                    self.handle_resize(setup_callback)
+                                except ValueError as exc:
+                                    # Shrunk below the minimum. The bare except
+                                    # below would swallow this and leave the
+                                    # aquarium drawing into a screen it does not
+                                    # fit. Stop, and report once curses has given
+                                    # the terminal back.
+                                    self.pending_error = exc
+                                    self.running = False
+                                    continue
                                 if showing_info:
                                     self.show_info_overlay()
-                                else:
-                                    self.redraw_screen()
                     except Exception:
                         pass
 
@@ -458,3 +483,6 @@ class Animation:
             curses.wrapper(_run)  # type: ignore
         except KeyboardInterrupt:
             pass
+
+        if self.pending_error is not None:
+            raise self.pending_error

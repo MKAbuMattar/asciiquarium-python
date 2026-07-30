@@ -8,6 +8,26 @@ The version lives in `asciiquarium/__version__.py` and is mirrored in `pyproject
 
 ## [Unreleased]
 
+### Fixed
+
+- **Resizing the terminal did nothing at all.** Not "handled badly" — ignored. `main()`
+  registered a handler for `SIGWINCH` that did nothing with it, and ncurses only installs its
+  own handler if the process has not already claimed one. So curses never learned the terminal
+  had changed, `getch()` never reported `KEY_RESIZE`, and the branch meant to deal with it was
+  unreachable. Removing that handler is the fix; measured with the handler in place a resize
+  produced no reaction whatsoever, and without it the scene rebuilds.
+
+  With the signal arriving, resize now rebuilds the scene instead of only updating two
+  numbers. Every entity is placed against the geometry it was created in: the waterlines are
+  tiled to a width, the castle is anchored to the right edge, the seaweed sits on the floor.
+  Widening the window used to leave a short waterline and a castle stranded mid-screen until
+  something forced a rebuild. Verified in a pty: growing 80×24 to 200×50 re-tiles the
+  waterline from 80 to 200 columns.
+
+  Shrinking below the 40×15 minimum now says so and exits, instead of being swallowed by the
+  input handler's catch-all and leaving the aquarium drawing into a screen it does not fit.
+  The message waits until curses has given the terminal back, so it is readable.
+
 ## [2.4.0] - 2026-07-28
 
 ### Fixed

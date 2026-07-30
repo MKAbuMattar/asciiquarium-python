@@ -34,13 +34,14 @@ def setup_aquarium(anim: Animation, classic_mode: bool = False):
 
 
 def signal_handler(sig, frame):
-    """Handle interrupt signals gracefully"""
-    if sig == signal.SIGINT:
-        sys.exit(0)
-    elif sig == signal.SIGWINCH:
-        pass
-    else:
-        sys.exit(1)
+    """Exit cleanly on an interrupt.
+
+    Deliberately not registered for SIGWINCH. ncurses installs its own handler
+    during initscr() only if the process has not already claimed one, so a
+    handler here wins and swallows the resize — curses never sets its flag and
+    getch() never reports KEY_RESIZE, which disabled resize handling entirely.
+    """
+    sys.exit(0 if sig == signal.SIGINT else 1)
 
 
 def show_info():
@@ -191,8 +192,6 @@ def main():
     update_thread.start()
 
     signal.signal(signal.SIGINT, signal_handler)
-    if hasattr(signal, "SIGWINCH"):
-        signal.signal(signal.SIGWINCH, signal_handler)
 
     try:
         anim = Animation()
