@@ -19,6 +19,7 @@ publish that silently uploaded nothing cannot report success.
 
 import argparse
 import datetime
+import json
 import pathlib
 import re
 import sys
@@ -181,27 +182,53 @@ def status() -> None:
         print(f"\n  Behind. PyPI has v{live}; this checkout is v{local}.")
 
 
-def is_on_pypi(version: str) -> bool:
-    """Does this exact version exist on PyPI?
-
-    Asks the per-version URL rather than reading `info.version` off the project
-    endpoint. That aggregate document is CDN-cached and lags: after 2.3.0 went
-    out it kept reporting 2.2.0 for minutes while the release was already
-    installable. Polling it means a good publish can be reported as a failure.
-    """
+def _on_version_endpoint(version: str) -> bool:
+    """Does /pypi/<pkg>/<version>/json answer?"""
     url = f"https://pypi.org/pypi/asciiquarium/{version}/json"
-    try:
-        with urllib.request.urlopen(url, timeout=5) as response:
-            return bool(200 <= response.status < 300)
-    except urllib.error.HTTPError as exc:
-        if exc.code == 404:
-            return False
-        raise
-    except (urllib.error.URLError, TimeoutError):
-        return False
+    with urllib.request.urlopen(url, timeout=5) as response:
+        return bool(200 <= response.status < 300)
 
 
-def verify(version: str, attempts: int = 10, delay: float = 6.0) -> None:
+def _on_simple_index(version: str) -> bool:
+    """Is it listed where pip and uv actually resolve from?"""
+    request = urllib.request.Request(
+        "https://pypi.org/simple/asciiquarium/",
+        headers={"Accept": "application/vnd.pypi.simple.v1+json"},
+    )
+    with urllib.request.urlopen(request, timeout=5) as response:
+        return version in json.load(response).get("versions", [])
+
+
+def is_on_pypi(version: str) -> bool:
+    """Has this exact version been published?
+
+    Asks both the per-version document and the simple index, and accepts
+    either. Neither is authoritative on its own: for a few minutes after an
+    upload PyPI's CDN serves inconsistent answers, and which one lands first
+    varies by edge node. 2.4.0 appeared on the per-version endpoint while the
+    simple index still omitted it; 2.4.1 did the reverse and the release was
+    failed for it despite having uploaded fine.
+
+    Deliberately not `info.version` on the project endpoint: that is the
+    aggregate document, it is cached hardest, and it reported 2.2.0 for minutes
+    after 2.3.0 shipped.
+    """
+    for probe in (_on_version_endpoint, _on_simple_index):
+        try:
+            if probe(version):
+                return True
+        except urllib.error.HTTPError as exc:
+            if exc.code != 404:
+                raise
+        except (urllib.error.URLError, TimeoutError, ValueError):
+            continue
+    return False
+
+
+# Five minutes. 2.4.1 uploaded successfully and was then failed by a sixty
+# second window, which skipped the tag and the release page and left the
+# release needing repair by hand.
+def verify(version: str, attempts: int = 30, delay: float = 10.0) -> None:
     """Block until PyPI has `version`, so a no-op upload cannot pass.
 
     An upload can exit 0 and serve nothing, so the release is not finished

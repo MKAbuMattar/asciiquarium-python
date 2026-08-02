@@ -135,3 +135,42 @@ def test_verify_stops_as_soon_as_it_appears(monkeypatch):
     monkeypatch.setattr(release_version.time, "sleep", lambda _: None)
     release_version.verify("2.3.1", attempts=10, delay=0)
     assert len(calls) == 3
+
+
+def test_the_simple_index_alone_is_enough(monkeypatch):
+    """2.4.1 uploaded fine and was failed anyway: the per-version endpoint was
+    still 404 while the simple index already listed it."""
+    monkeypatch.setattr(release_version, "_on_version_endpoint", lambda v: False)
+    monkeypatch.setattr(release_version, "_on_simple_index", lambda v: True)
+    assert release_version.is_on_pypi("2.4.1") is True
+
+
+def test_the_version_endpoint_alone_is_enough(monkeypatch):
+    """2.4.0 was the other way round, so neither probe can be the only one."""
+    monkeypatch.setattr(release_version, "_on_version_endpoint", lambda v: True)
+    monkeypatch.setattr(release_version, "_on_simple_index", lambda v: False)
+    assert release_version.is_on_pypi("2.4.0") is True
+
+
+def test_a_404_on_one_probe_does_not_stop_the_other(monkeypatch):
+    def missing(version):
+        raise urllib.error.HTTPError("u", 404, "Not Found", {}, None)
+
+    monkeypatch.setattr(release_version, "_on_version_endpoint", missing)
+    monkeypatch.setattr(release_version, "_on_simple_index", lambda v: True)
+    assert release_version.is_on_pypi("2.4.1") is True
+
+
+def test_both_silent_means_not_published(monkeypatch):
+    monkeypatch.setattr(release_version, "_on_version_endpoint", lambda v: False)
+    monkeypatch.setattr(release_version, "_on_simple_index", lambda v: False)
+    assert release_version.is_on_pypi("99.0.0") is False
+
+
+def test_the_window_is_long_enough_for_pypi():
+    """2.4.1 was failed by a 60 second window after a successful upload."""
+    import inspect
+
+    sig = inspect.signature(release_version.verify)
+    window = sig.parameters["attempts"].default * sig.parameters["delay"].default
+    assert window >= 300, f"only {window}s of patience; 2.4.1 needed more than 60"
