@@ -223,12 +223,7 @@ class Animation:
                 o_x, o_y, _ = other.position()
                 o_w, o_h = other.size()
 
-                if (
-                    e_x < o_x + o_w
-                    and e_x + e_w > o_x
-                    and e_y < o_y + o_h
-                    and e_y + e_h > o_y
-                ):
+                if e_x < o_x + o_w and e_x + e_w > o_x and e_y < o_y + o_h and e_y + e_h > o_y:
                     entity.collision_list.append(other)
 
     def _draw_entity(self, entity: Entity):

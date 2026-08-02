@@ -24,10 +24,14 @@ jobs:
         with:
           enable-cache: true
 
-      # Both currently pass on main with zero findings, so any error here was
-      # introduced by the change under review.
+      # All of these pass on main with zero findings, so any error here was
+      # introduced by the change under review. ruff replaced black and isort,
+      # so --check is what keeps the tree formatted.
+      - name: Ruff format
+        run: uvx ruff format --check asciiquarium tests scripts
+
       - name: Ruff
-        run: uvx ruff check asciiquarium tests
+        run: uvx ruff check asciiquarium tests scripts
 
       - name: Mypy
         run: uvx mypy --ignore-missing-imports asciiquarium

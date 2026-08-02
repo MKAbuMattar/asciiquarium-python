@@ -86,9 +86,7 @@ def test_a_server_error_is_not_swallowed(monkeypatch):
 def test_verify_gives_up_and_fails_loudly(monkeypatch):
     stub_urlopen(
         monkeypatch,
-        lambda url: (_ for _ in ()).throw(
-            urllib.error.HTTPError(url, 404, "Not Found", {}, None)
-        ),
+        lambda url: (_ for _ in ()).throw(urllib.error.HTTPError(url, 404, "Not Found", {}, None)),
     )
     monkeypatch.setattr(release_version.time, "sleep", lambda _: None)
     with pytest.raises(SystemExit, match="never served"):

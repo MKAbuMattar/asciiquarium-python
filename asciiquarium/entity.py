@@ -152,9 +152,7 @@ class Entity:
         """Mark entity for removal"""
         self.is_alive = False
 
-    def should_die(
-        self, screen_width: int, screen_height: int, current_time: float
-    ) -> bool:
+    def should_die(self, screen_width: int, screen_height: int, current_time: float) -> bool:
         """Check if entity should be removed"""
         if not self.is_alive:
             return True

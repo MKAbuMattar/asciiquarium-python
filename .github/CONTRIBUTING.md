@@ -19,13 +19,18 @@ uv run asciiquarium
 ## Before you open a pull request
 
 ```bash
-uvx ruff check asciiquarium tests
+uvx ruff format --check asciiquarium tests scripts
+uvx ruff check asciiquarium tests scripts
 uvx mypy --ignore-missing-imports asciiquarium
 uvx pytest -q
 ```
 
-All three are **clean on `main`**. If any of them reports something, it came from your
-change. CI runs the same three commands.
+All four are **clean on `main`**. If any of them reports something, it came from your
+change. CI runs the same four commands.
+
+`uvx ruff format asciiquarium tests scripts` writes the formatting rather than checking it.
+There is no separate formatter: ruff replaced both `black` and `isort`, and the `"I"` rules
+in `pyproject.toml` are what sort imports now.
 
 `uv sync` installs no dev tools — the dependency groups in `pyproject.toml` still need
 consolidating (`ROADMAP` item 10) — which is why these are `uvx` invocations that fetch what

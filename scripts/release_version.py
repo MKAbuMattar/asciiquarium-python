@@ -89,8 +89,7 @@ def assert_at(version: str) -> None:
     here = current()
     if here != version:
         raise SystemExit(
-            f"error: refusing to publish. The branch asks for {version} but this "
-            f"tree is at {here}."
+            f"error: refusing to publish. The branch asks for {version} but this tree is at {here}."
         )
     _both_files_agree(version)
     print(f"tree is at {version}")

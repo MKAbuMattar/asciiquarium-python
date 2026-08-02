@@ -75,8 +75,8 @@ Same pattern for fish (`death_cb=add_fish`) and seaweed (`death_cb=add_seaweed`)
 | Command | What it does |
 |---|---|
 | `uv run asciiquarium` | Run it. Needs a real TTY of at least 40×15. |
-| `hatch run lint` | `ruff check asciiquarium` then `mypy asciiquarium`. |
-| `hatch run fmt` | `isort` then `black` over the package. |
+| `hatch run lint` | `ruff format --check`, `ruff check`, then `mypy`. |
+| `hatch run fmt` | `ruff format` then `ruff check --fix`. No black, no isort. |
 | `uvx pytest -q` | Run the tests. No terminal required. |
 | `python -m build` | Build sdist + wheel via hatchling. |
 | `python3 scripts/release_version.py status` | This checkout's version vs what PyPI is serving. |
@@ -142,8 +142,9 @@ version would be accepted before you push anything.
 
 ## Hard rules
 
-- **`uvx ruff check asciiquarium tests`, `uvx mypy --ignore-missing-imports asciiquarium` and
-  `uvx pytest -q` must pass** before commit. All three are clean on `main`, so anything they
+- **`uvx ruff format --check asciiquarium tests scripts`, `uvx ruff check asciiquarium tests
+  scripts`, `uvx mypy --ignore-missing-imports asciiquarium` and `uvx pytest -q` must pass**
+  before commit. All four are clean on `main`, so anything they
   report is yours.
 - **Never edit the version by hand.** `asciiquarium/__version__.py` is the source of truth
   and `pyproject.toml` mirrors it, but the release pipeline is what writes both.

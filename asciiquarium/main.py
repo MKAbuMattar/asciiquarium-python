@@ -105,14 +105,14 @@ Enjoy your ASCII aquarium! 🐠🐟🦈🐋
 
 def get_version_info():
     """Get detailed version information in AWS CLI style"""
-    python_version = (
-        f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-    )
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     system = platform.system()
     release = platform.release()
     machine = platform.machine()
 
-    version_string = f"asciiquarium/{__version__} Python/{python_version} {system}/{release} {machine}"
+    version_string = (
+        f"asciiquarium/{__version__} Python/{python_version} {system}/{release} {machine}"
+    )
     return version_string
 
 
