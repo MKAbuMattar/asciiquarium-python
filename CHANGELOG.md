@@ -8,6 +8,8 @@ The version lives in `asciiquarium/__version__.py` and is mirrored in `pyproject
 
 ## [Unreleased]
 
+## [2.4.2] - 2026-08-02
+
 ### Fixed
 
 - **A release could be reported as failed after publishing successfully.** 2.4.1 uploaded to
@@ -191,7 +193,8 @@ Releases before 2.2.0 predate this changelog. See the
 [commit history](https://github.com/MKAbuMattar/asciiquarium-python/commits/main) and the
 [releases page](https://github.com/MKAbuMattar/asciiquarium-python/releases).
 
-[Unreleased]: https://github.com/MKAbuMattar/asciiquarium-python/compare/v2.4.1...HEAD
+[Unreleased]: https://github.com/MKAbuMattar/asciiquarium-python/compare/v2.4.2...HEAD
+[2.4.2]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.4.2
 [2.4.1]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.4.1
 [2.4.0]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.4.0
 [2.3.1]: https://github.com/MKAbuMattar/asciiquarium-python/releases/tag/v2.3.1
