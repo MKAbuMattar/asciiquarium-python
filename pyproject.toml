@@ -35,12 +35,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black>=22.0.0",
-    "hatch>=1.8.0",
-    "isort>=5.10.0",
     "mypy>=1.0.0",
-    "ruff>=0.1.0",
     "pytest>=7.0.0",
+    "ruff>=0.6.0",
 ]
 
 [project.scripts]
@@ -102,16 +99,6 @@ ignore_errors = true
 [dependency-groups]
 dev = []
 
-[tool.isort]
-profile = "black"
-line_length = 88
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-skip = ["__init__.py"]
-
 [tool.hatch.build.targets.wheel]
 packages = ["asciiquarium"]
 include = ["LICENSE", "README.md"]
@@ -125,22 +112,22 @@ include = ["LICENSE", "README.md"]
 
 [tool.hatch.envs.default]
 dependencies = [
-    "black>=22.0.0,<24.0.0",
-    "hatch>=1.8.0,<1.9.0",
-    "isort>=5.10.0,<5.12.0",
-    "mypy>=0.990,<1.5.0",
-    "ruff>=0.1.0,<0.2.0",
+    "mypy>=1.0.0",
+    "pytest>=7.0.0",
+    "ruff>=0.6.0",
     "twine>=4.0.2",
-    "setuptools>=61.0",
-    "wheel>=0.37.1",
 ]
 
 [tool.hatch.envs.default.scripts]
+# ruff formats and sorts imports, so black and isort are both gone. The "I"
+# rules in [tool.ruff.lint] are what replaced isort; keep them selected.
 fmt = [
-    "isort asciiquarium",
-    "black asciiquarium",
+    "ruff format asciiquarium tests scripts",
+    "ruff check --fix asciiquarium tests scripts",
 ]
 lint = [
-    "ruff check asciiquarium",
-    "mypy asciiquarium",
+    "ruff format --check asciiquarium tests scripts",
+    "ruff check asciiquarium tests scripts",
+    "mypy --ignore-missing-imports asciiquarium",
 ]
+test = "pytest -q"

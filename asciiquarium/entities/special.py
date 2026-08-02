@@ -38,11 +38,7 @@ def add_shark(old_ent: Optional[Entity], anim: Any):
 
     direction = random.randint(0, 1)
     x = -53
-    y = (
-        random.randint(9, max(9, anim.height() - (10 + 9))) + 9
-        if anim.height() > 19
-        else 9
-    )
+    y = random.randint(9, max(9, anim.height() - (10 + 9))) + 9 if anim.height() > 19 else 9
     teeth_x = -9
     teeth_y = y + 7
     speed = 2

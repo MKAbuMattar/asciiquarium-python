@@ -129,10 +129,7 @@ def food_at_mouth(fish: Entity, food: Entity) -> bool:
     food_x, food_y, _ = food.position()
     mouth_x, mouth_y = mouth_position(fish)
 
-    return (
-        abs(food_x - mouth_x) <= MOUTH_X_TOLERANCE
-        and abs(food_y - mouth_y) <= MOUTH_Y_TOLERANCE
-    )
+    return abs(food_x - mouth_x) <= MOUTH_X_TOLERANCE and abs(food_y - mouth_y) <= MOUTH_Y_TOLERANCE
 
 
 def add_munch(fish: Entity, anim: Any):
@@ -398,9 +395,7 @@ def add_fish(old_fish: Optional[Entity], anim: Any, classic_mode: bool = False):
     available_height = screen_bottom - water_line_bottom - fish_entity.height
 
     if available_height > 0:
-        fish_entity.y = random.randint(
-            water_line_bottom, water_line_bottom + available_height
-        )
+        fish_entity.y = random.randint(water_line_bottom, water_line_bottom + available_height)
     else:
         fish_entity.y = water_line_bottom
 

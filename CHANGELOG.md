@@ -8,6 +8,18 @@ The version lives in `asciiquarium/__version__.py` and is mirrored in `pyproject
 
 ## [Unreleased]
 
+### Changed
+
+- `ruff` is now the only formatter and linter. `black` and `isort` were configured alongside
+  it and disagreed with it — `isort` wrapped at 88 columns, `ruff` declared 100 — and `ruff`
+  already did both jobs, with import sorting selected through its `"I"` rules. The tree is
+  reformatted once at 100 columns, the width `ruff` was already configured for, and
+  `ruff format --check` is a CI gate from here on so it cannot drift again.
+
+  Nothing in the aquarium changed. Every shape and colour mask in the package was hashed
+  before and after the reformat and is byte-identical, which matters more here than usual: a
+  formatter that rewrapped a fish would break the rendering silently and no test would catch it.
+
 ## [2.4.1] - 2026-07-30
 
 ### Fixed
