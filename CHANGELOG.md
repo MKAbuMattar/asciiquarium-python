@@ -8,6 +8,24 @@ The version lives in `asciiquarium/__version__.py` and is mirrored in `pyproject
 
 ## [Unreleased]
 
+### Fixed
+
+- **A release could be reported as failed after publishing successfully.** 2.4.1 uploaded to
+  PyPI and was then failed by its own confirmation step, which skipped the tag and the
+  release page and left the release to be finished by hand. Two causes, both fixed.
+
+  The confirmation polled for sixty seconds. PyPI took longer. It now waits five minutes.
+
+  It also asked one endpoint. For a few minutes after an upload PyPI's CDN serves
+  inconsistent answers and which view updates first varies by edge node: 2.4.0 appeared on
+  the per-version document while the simple index still omitted it, and 2.4.1 did the exact
+  reverse. Both are now asked and either is accepted.
+
+- **The publish job can be re-run.** `twine upload` gained `--skip-existing` and the tagging
+  step no longer fails on a tag that already exists, so a failure in any step after the
+  upload can be retried instead of needing the tag and release page created manually. The
+  release gate also runs the same four checks as CI, which it had drifted from.
+
 ### Changed
 
 - `ruff` is now the only formatter and linter. `black` and `isort` were configured alongside

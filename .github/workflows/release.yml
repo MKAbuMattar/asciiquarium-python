@@ -74,8 +74,11 @@ jobs:
           git push origin "HEAD:${GITHUB_HEAD_REF}"
 
       # The same gate validate.yml runs. A release must not lower the bar.
+      - name: Format check
+        run: uvx ruff format --check asciiquarium tests scripts
+
       - name: Lint
-        run: uvx ruff check asciiquarium tests
+        run: uvx ruff check asciiquarium tests scripts
 
       - name: Type-check
         run: uvx mypy --ignore-missing-imports asciiquarium
@@ -180,7 +183,11 @@ jobs:
                  "the 'pypi' environment."
             exit 1
           fi
-          uvx twine upload --non-interactive dist/*
+          # --skip-existing makes this job re-runnable. Without it, a failure
+          # in any later step (2.4.1 died on the PyPI poll) could not be
+          # retried: the re-run would stop here on "file already exists" and
+          # the tag and release page still had to be made by hand.
+          uvx twine upload --non-interactive --skip-existing dist/*
 
       # An upload can succeed and still serve nothing. Poll until it is real.
       - name: Confirm PyPI is serving it
@@ -189,6 +196,10 @@ jobs:
       - name: Tag the release commit
         run: |
           version="${{ steps.version.outputs.version }}"
+          if git ls-remote --exit-code --tags origin "v$version" >/dev/null 2>&1; then
+            echo "Tag v$version already exists, leaving it alone."
+            exit 0
+          fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "v$version" -m "asciiquarium v$version"
